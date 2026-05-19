@@ -1,0 +1,18 @@
+{
+  "name": "课堂反馈生成器",
+  "short_name": "课堂反馈",
+  "description": "快速生成课堂反馈文本",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#e8f4fd",
+  "theme_color": "#5b9bd5",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

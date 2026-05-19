@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#5b9bd5">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <title>课堂反馈生成器</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="app-container">
+    <header class="app-header">
+      <h1>课堂反馈生成器</h1>
+    </header>
+
+    <main class="tab-content">
+      <!-- Tab 1: 反馈生成 -->
+      <section id="tab-feedback" class="tab-page active">
+        <div class="card">
+          <h2 class="card-title">反馈信息</h2>
+          <form id="feedback-form" autocomplete="off">
+            <div class="form-row">
+              <div class="form-group half">
+                <label for="fb-date">日期</label>
+                <input type="date" id="fb-date">
+              </div>
+              <div class="form-group half">
+                <label for="fb-time">时间</label>
+                <input type="text" id="fb-time" placeholder="如：15:00-17:00" list="time-presets" autocomplete="off">
+                <datalist id="time-presets"></datalist>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>学生姓名（可多选）</label>
+              <div class="student-check-container" id="fb-student-container">
+                <div class="student-check-header">
+                  <label class="check-all-label">
+                    <input type="checkbox" id="fb-select-all"> 全选
+                  </label>
+                  <span class="selected-count" id="fb-selected-count">未选择</span>
+                </div>
+                <div class="student-check-list" id="fb-student-list">
+                  <div class="empty-hint" id="fb-student-empty">暂无学生，请先在「学生管理」中添加</div>
+                </div>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group half">
+                <label for="fb-subject">科目</label>
+                <input type="text" id="fb-subject" placeholder="如：数学" list="subject-presets" autocomplete="off">
+                <datalist id="subject-presets"></datalist>
+              </div>
+              <div class="form-group half">
+                <label for="fb-teacher">督学师</label>
+                <input type="text" id="fb-teacher" placeholder="如：文老师" list="teacher-presets" autocomplete="off">
+                <datalist id="teacher-presets"></datalist>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="fb-content">学习内容</label>
+              <input type="text" id="fb-content" placeholder="如：卷子">
+            </div>
+            <div class="form-row">
+              <div class="form-group half">
+                <label for="fb-accuracy">正确率（%）</label>
+                <input type="text" id="fb-accuracy" placeholder="如：80">
+              </div>
+              <div class="form-group half">
+                <label for="fb-mastery">掌握比例</label>
+                <input type="text" id="fb-mastery" placeholder="如：7/8">
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="fb-improvement">建议提升</label>
+              <input type="text" id="fb-improvement" placeholder="如：圆的综合证明题">
+            </div>
+            <div class="form-group">
+              <label for="fb-performance">课堂表现</label>
+              <textarea id="fb-performance" rows="3" placeholder="描述学生的课堂表现..."></textarea>
+            </div>
+            <div class="form-group">
+              <label for="fb-homework">作业布置与完成情况</label>
+              <textarea id="fb-homework" rows="2">作业已完成，课后多练习巩固知识点</textarea>
+            </div>
+          </form>
+          <div class="form-actions">
+            <button class="btn btn-primary" data-action="generate">批量生成反馈</button>
+            <button class="btn btn-secondary" data-action="clear-form">清空表单</button>
+          </div>
+        </div>
+
+        <div id="preview-area" style="display:none">
+          <div id="batch-preview-list"></div>
+          <div class="batch-actions">
+            <button class="btn btn-primary" data-action="copy-all">一键复制全部</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab 2: 学生管理 -->
+      <section id="tab-roster" class="tab-page">
+        <div class="card">
+          <h2 class="card-title">添加学生</h2>
+          <div class="form-row">
+            <div class="form-group half">
+              <label for="roster-name">姓名</label>
+              <input type="text" id="roster-name" placeholder="学生姓名">
+            </div>
+            <div class="form-group half">
+              <label for="roster-class">班级</label>
+              <input type="text" id="roster-class" placeholder="如：初三(1)班">
+            </div>
+          </div>
+          <button class="btn btn-primary btn-full" data-action="add-student">添加</button>
+        </div>
+
+        <div class="card">
+          <h2 class="card-title">Excel 批量导入</h2>
+          <p class="hint-text">第一列：姓名，第二列：班级（第一行为表头会被跳过）</p>
+          <label class="btn btn-outline btn-full file-label">
+            <input type="file" id="excel-file" accept=".xlsx,.xls" hidden>
+            选择 Excel 文件
+          </label>
+        </div>
+
+        <div class="card">
+          <h2 class="card-title">学生名单</h2>
+          <div id="roster-empty" class="empty-hint">暂无学生，请添加或导入</div>
+          <div id="roster-list" class="student-list"></div>
+        </div>
+      </section>
+
+      <!-- Tab 3: 历史记录 -->
+      <section id="tab-history" class="tab-page">
+        <div id="history-empty" class="empty-hint card">暂无历史记录</div>
+        <div id="history-list" class="history-list"></div>
+      </section>
+
+      <!-- Tab 4: 设置 -->
+      <section id="tab-settings" class="tab-page">
+        <div class="card">
+          <h2 class="card-title">默认设置</h2>
+          <div class="form-group">
+            <label for="set-subject">默认科目</label>
+            <input type="text" id="set-subject" placeholder="如：数学">
+          </div>
+          <div class="form-group">
+            <label for="set-teacher">默认督学师</label>
+            <input type="text" id="set-teacher" placeholder="如：文老师">
+          </div>
+          <div class="form-group">
+            <label for="set-time">默认时间段</label>
+            <input type="text" id="set-time" placeholder="如：15:00-17:00">
+          </div>
+          <button class="btn btn-primary btn-full" data-action="save-settings">保存设置</button>
+        </div>
+
+        <div class="card">
+          <h2 class="card-title">科目预设</h2>
+          <p class="hint-text">预设常用科目，反馈页可快速选择</p>
+          <div class="preset-input-row">
+            <input type="text" id="preset-subject-input" placeholder="添加科目，如：数学">
+            <button class="btn btn-primary btn-sm" data-action="add-preset" data-preset-type="subject">添加</button>
+          </div>
+          <div class="preset-list" id="preset-subject-list"></div>
+        </div>
+
+        <div class="card">
+          <h2 class="card-title">督学师预设</h2>
+          <p class="hint-text">预设督学师姓名，反馈页可快速选择</p>
+          <div class="preset-input-row">
+            <input type="text" id="preset-teacher-input" placeholder="添加教师，如：文老师">
+            <button class="btn btn-primary btn-sm" data-action="add-preset" data-preset-type="teacher">添加</button>
+          </div>
+          <div class="preset-list" id="preset-teacher-list"></div>
+        </div>
+
+        <div class="card">
+          <h2 class="card-title">时间段预设</h2>
+          <p class="hint-text">预设上课时间段，反馈页可快速选择</p>
+          <div class="preset-input-row">
+            <input type="text" id="preset-time-input" placeholder="添加时段，如：15:00-17:00">
+            <button class="btn btn-primary btn-sm" data-action="add-preset" data-preset-type="time">添加</button>
+          </div>
+          <div class="preset-list" id="preset-time-list"></div>
+        </div>
+
+        <div class="card card-danger">
+          <h2 class="card-title">危险操作</h2>
+          <p class="hint-text">清除所有学生、历史记录、预设和设置数据，此操作不可恢复</p>
+          <button class="btn btn-danger btn-full" data-action="clear-all">清除所有数据</button>
+        </div>
+      </section>
+    </main>
+
+    <nav class="tab-bar">
+      <button class="tab-btn active" data-tab="feedback">
+        <span class="tab-icon">&#x1F4DD;</span>
+        <span class="tab-label">反馈生成</span>
+      </button>
+      <button class="tab-btn" data-tab="roster">
+        <span class="tab-icon">&#x1F465;</span>
+        <span class="tab-label">学生管理</span>
+      </button>
+      <button class="tab-btn" data-tab="history">
+        <span class="tab-icon">&#x1F4CB;</span>
+        <span class="tab-label">历史记录</span>
+      </button>
+      <button class="tab-btn" data-tab="settings">
+        <span class="tab-icon">&#x2699;</span>
+        <span class="tab-label">设置</span>
+      </button>
+    </nav>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/roster.js"></script>
+  <script src="js/feedback.js"></script>
+  <script src="js/history.js"></script>
+  <script src="js/settings.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

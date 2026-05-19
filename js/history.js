@@ -1,0 +1,150 @@
+(function() {
+  'use strict';
+
+  var Storage = window.CF.Storage;
+
+  function render() {
+    var history = Storage.getHistory();
+    var container = document.getElementById('history-list');
+    var emptyHint = document.getElementById('history-empty');
+
+    if (history.length === 0) {
+      container.innerHTML = '';
+      emptyHint.style.display = 'block';
+      return;
+    }
+
+    emptyHint.style.display = 'none';
+    container.innerHTML = history.map(function(h) {
+      return '<div class="history-item" data-id="' + h.id + '">' +
+        '<div class="history-header" data-action="toggle-history" data-id="' + h.id + '">' +
+          '<div class="history-summary">' +
+            '<span class="history-student">' + escapeHtml(h.studentName) + '</span>' +
+            '<span class="history-subject">' + escapeHtml(h.subject) + '</span>' +
+            '<span class="history-date">' + escapeHtml(h.date) + '</span>' +
+          '</div>' +
+          '<span class="history-arrow">&#x25BC;</span>' +
+        '</div>' +
+        '<div class="history-detail" style="display:none">' +
+          '<pre class="history-text">' + escapeHtml(buildFeedbackText(h)) + '</pre>' +
+          '<div class="history-actions">' +
+            '<button class="btn btn-primary" data-action="copy-history" data-id="' + h.id + '">复制</button>' +
+            '<button class="btn btn-secondary" data-action="share-history" data-id="' + h.id + '">分享</button>' +
+            '<button class="btn btn-delete" data-action="delete-history" data-id="' + h.id + '">删除</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  function formatDateStr(dateStr) {
+    if (!dateStr) return '';
+    var parts = dateStr.split('-');
+    if (parts.length === 3) {
+      return parseInt(parts[1], 10) + '.' + parseInt(parts[2], 10);
+    }
+    return dateStr;
+  }
+
+  function buildFeedbackText(h) {
+    return '课堂反馈\n' +
+      '日期：' + formatDateStr(h.date) + '\n' +
+      '时间：' + h.time + '\n' +
+      '学生姓名：' + h.studentName + '\n' +
+      '科目：' + h.subject + '\n' +
+      '督学师：' + h.teacher + '\n' +
+      '学习内容：' + h.content + '\n' +
+      '\n' +
+      '正确率：' + h.accuracy + '%\n' +
+      '掌握比例：' + h.mastery + '\n' +
+      '建议提升：' + h.improvement + '\n' +
+      '\n' +
+      '课堂表现：' + h.performance + '\n' +
+      '\n' +
+      '作业布置与完成情况：' + h.homework;
+  }
+
+  function toggleDetail(id) {
+    var item = document.querySelector('.history-item[data-id="' + id + '"]');
+    if (!item) return;
+    var detail = item.querySelector('.history-detail');
+    var arrow = item.querySelector('.history-arrow');
+    if (detail.style.display === 'none') {
+      detail.style.display = 'block';
+      arrow.innerHTML = '&#x25B2;';
+    } else {
+      detail.style.display = 'none';
+      arrow.innerHTML = '&#x25BC;';
+    }
+  }
+
+  function copyHistory(id) {
+    var record = Storage.getHistory().find(function(h) { return h.id === id; });
+    if (!record) return;
+
+    var text = buildFeedbackText(record);
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function() {
+        showToast('已复制到剪贴板');
+      }).catch(function() {
+        fallbackCopy(text);
+      });
+    } else {
+      fallbackCopy(text);
+    }
+  }
+
+  function shareHistory(id) {
+    var record = Storage.getHistory().find(function(h) { return h.id === id; });
+    if (!record) return;
+
+    var text = buildFeedbackText(record);
+    if (navigator.share) {
+      navigator.share({ text: text }).catch(function() {});
+    } else {
+      copyHistory(id);
+    }
+  }
+
+  function deleteHistory(id) {
+    if (!confirm('确定要删除该记录吗？')) return;
+    Storage.deleteFeedback(id);
+    render();
+    showToast('已删除');
+  }
+
+  function fallbackCopy(text) {
+    var textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    try {
+      document.execCommand('copy');
+      showToast('已复制到剪贴板');
+    } catch (e) {
+      showToast('复制失败，请手动选择复制');
+    }
+    document.body.removeChild(textarea);
+  }
+
+  function escapeHtml(str) {
+    var div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function showToast(msg) {
+    window.CF.showToast(msg);
+  }
+
+  window.CF = window.CF || {};
+  window.CF.History = {
+    render: render,
+    toggleDetail: toggleDetail,
+    copyHistory: copyHistory,
+    shareHistory: shareHistory,
+    deleteHistory: deleteHistory
+  };
+})();
