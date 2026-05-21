@@ -36,42 +36,73 @@
     var emptyHint = document.getElementById('fb-student-empty');
     var selectAll = document.getElementById('fb-select-all');
 
+    // Remove only labels, keep empty hint in DOM
+    var labels = container.querySelectorAll('label');
+    for (var li = 0; li < labels.length; li++) {
+      labels[li].parentNode.removeChild(labels[li]);
+    }
+
     if (students.length === 0) {
-      container.innerHTML = '';
-      emptyHint.style.display = 'block';
+      if (emptyHint) { emptyHint.style.display = ''; container.appendChild(emptyHint); }
       selectAll.checked = false;
       selectAll.disabled = true;
       updateSelectedCount();
       return;
     }
 
-    emptyHint.style.display = 'none';
+    if (emptyHint) emptyHint.style.display = 'none';
     selectAll.disabled = false;
 
-    // Get previously checked students from the draft or current state
     var checkedNames = getCheckedStudentNames();
+    var allCheckedFlag = true;
 
-    container.innerHTML = students.map(function(s) {
-      var checked = checkedNames.indexOf(s.name) >= 0 ? ' checked' : '';
-      return '<label class="student-check-item">' +
-        '<input type="checkbox" class="fb-student-check" value="' + escapeHtml(s.name) + '"' + checked + '>' +
-        '<span class="check-name">' + escapeHtml(s.name) + '</span>' +
-        '<span class="check-class">' + escapeHtml(s.className) + '</span>' +
-      '</label>';
-    }).join('');
-
-    // Update select all state
-    var allChecks = container.querySelectorAll('.fb-student-check');
-    var allChecked = allChecks.length > 0 && Array.from(allChecks).every(function(c) { return c.checked; });
-    selectAll.checked = allChecked;
+    for (var i = 0; i < students.length; i++) {
+      var s = students[i];
+      var checked = checkedNames.indexOf(s.name) >= 0;
+      if (!checked) allCheckedFlag = false;
+      var label = document.createElement('label');
+      var cb = document.createElement('input');
+      cb.type = 'checkbox'; cb.className = 'fb-student-check'; cb.value = s.name;
+      cb.checked = checked;
+      var ns = document.createElement('span');
+      ns.className = 'check-name'; ns.textContent = s.name;
+      var cs = document.createElement('span');
+      cs.className = 'check-class'; cs.textContent = s.className;
+      label.appendChild(cb); label.appendChild(ns); label.appendChild(cs);
+      container.appendChild(label);
+    }
+    selectAll.checked = students.length > 0 && allCheckedFlag;
 
     updateSelectedCount();
+
+    var input = document.getElementById('fb-student-input');
+    if (input) filterStudentList(input.value);
+  }
+
+  function filterStudentList(query) {
+    var items = document.querySelectorAll('.student-filter-list label');
+    var q = (query || '').toLowerCase();
+    var hasVisible = false;
+    Array.prototype.forEach.call(items, function(item) {
+      var text = (item.textContent || '').toLowerCase();
+      if (!q || text.indexOf(q) >= 0) {
+        item.classList.remove('filtered-out');
+        hasVisible = true;
+      } else {
+        item.classList.add('filtered-out');
+      }
+    });
+    // Show/hide empty hint
+    var empty = document.getElementById('fb-student-empty');
+    if (empty) {
+      empty.style.display = hasVisible ? 'none' : 'block';
+    }
   }
 
   function getCheckedStudentNames() {
     var checks = document.querySelectorAll('.fb-student-check');
     var names = [];
-    checks.forEach(function(c) {
+    Array.prototype.forEach.call(checks, function(c) {
       if (c.checked) names.push(c.value);
     });
     return names;
@@ -122,6 +153,10 @@
           var timeEl = document.getElementById('fb-time');
           if (timeEl && !timeEl.value) timeEl.value = draft.time;
         }
+        if (draft.studentInput) {
+          var siEl = document.getElementById('fb-student-input');
+          if (siEl && !siEl.value) siEl.value = draft.studentInput;
+        }
       }
     } catch (e) {}
 
@@ -133,6 +168,7 @@
       });
       draft.time = document.getElementById('fb-time').value;
       draft.students = getCheckedStudentNames();
+      draft.studentInput = document.getElementById('fb-student-input').value;
       localStorage.setItem(saveKey, JSON.stringify(draft));
     });
 
@@ -143,7 +179,7 @@
         saveDraftStudents();
         // Update select all state
         var allChecks = document.querySelectorAll('.fb-student-check');
-        var allChecked = Array.from(allChecks).every(function(c) { return c.checked; });
+        var allChecked = Array.prototype.every.call(allChecks, function(c) { return c.checked; });
         document.getElementById('fb-select-all').checked = allChecked;
       }
     });
@@ -151,12 +187,26 @@
     // Select all / deselect all
     document.getElementById('fb-select-all').addEventListener('change', function() {
       var checked = this.checked;
-      document.querySelectorAll('.fb-student-check').forEach(function(c) {
+      Array.prototype.forEach.call(document.querySelectorAll('.fb-student-check'), function(c) {
         c.checked = checked;
       });
       updateSelectedCount();
       saveDraftStudents();
     });
+
+    // Filter student list as user types, and force refresh on focus
+    var studentInput = document.getElementById('fb-student-input');
+    if (studentInput) {
+      studentInput.addEventListener('input', function() {
+        filterStudentList(this.value);
+      });
+      studentInput.addEventListener('focus', function() {
+        refreshStudentList();
+      });
+      studentInput.addEventListener('click', function() {
+        refreshStudentList();
+      });
+    }
   }
 
   function saveDraftStudents() {
@@ -209,10 +259,11 @@
   }
 
   function generateFeedback() {
-    var selectedStudents = getCheckedStudentNames();
+    var manualInput = document.getElementById('fb-student-input').value.trim();
+    var selectedStudents = manualInput ? [manualInput] : getCheckedStudentNames();
     var data = getFormData();
 
-    if (selectedStudents.length === 0) { showToast('请至少选择一个学生'); return null; }
+    if (selectedStudents.length === 0) { showToast('请输入学生姓名或从名单勾选'); return null; }
     if (!data.subject) { showToast('请输入科目'); return null; }
 
     var previewArea = document.getElementById('preview-area');
@@ -309,7 +360,7 @@
   }
 
   function clearForm() {
-    var fields = ['subject', 'teacher', 'content', 'accuracy', 'mastery', 'improvement', 'performance'];
+    var fields = ['student-input', 'subject', 'teacher', 'content', 'accuracy', 'mastery', 'improvement', 'performance'];
     fields.forEach(function(f) {
       document.getElementById('fb-' + f).value = '';
     });
@@ -329,7 +380,7 @@
     }
 
     // Clear student selections
-    document.querySelectorAll('.fb-student-check').forEach(function(c) { c.checked = false; });
+    Array.prototype.forEach.call(document.querySelectorAll('.fb-student-check'), function(c) { c.checked = false; });
     document.getElementById('fb-select-all').checked = false;
     updateSelectedCount();
 

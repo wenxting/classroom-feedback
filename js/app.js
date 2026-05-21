@@ -2,6 +2,8 @@
   'use strict';
 
   function init() {
+    window.CF.Storage.repairStudents();
+    window.CF.Storage.cleanOldHistory();
     window.CF.Feedback.init();
     window.CF.Roster.render();
     window.CF.History.render();
@@ -97,6 +99,8 @@
       window.CF.History.render();
     }
     if (tabName === 'feedback') {
+      var input = document.getElementById('fb-student-input');
+      if (input) input.value = '';
       window.CF.Feedback.refreshStudentList();
     }
     if (tabName === 'settings') {

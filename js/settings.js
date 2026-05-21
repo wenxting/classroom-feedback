@@ -9,6 +9,12 @@
     document.getElementById('set-teacher').value = settings.defaultTeacher || '';
     document.getElementById('set-time').value = settings.defaultTime || '';
     renderPresets();
+    updateStats();
+  }
+
+  function updateStats() {
+    var el = document.getElementById('stat-count');
+    if (el) el.textContent = Storage.getFeedbackCount();
   }
 
   function save() {

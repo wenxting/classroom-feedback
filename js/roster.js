@@ -39,7 +39,6 @@
     nameInput.value = '';
     classInput.value = '';
     render();
-    window.CF.Feedback.refreshStudentList();
     showToast('添加成功');
   }
 
@@ -47,7 +46,6 @@
     if (!confirm('确定要删除该学生吗？')) return;
     Storage.deleteStudent(id);
     render();
-    window.CF.Feedback.refreshStudentList();
     showToast('已删除');
   }
 
@@ -56,29 +54,44 @@
 
     var reader = new FileReader();
     reader.onload = function(e) {
+      var rows, count = 0;
+
+      // Step 1: Parse Excel only
       try {
         var data = new Uint8Array(e.target.result);
         var workbook = XLSX.read(data, { type: 'array' });
         var firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-        var rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
-
-        var count = 0;
-        for (var i = 1; i < rows.length; i++) {
-          var name = String(rows[i][0] || '').trim();
-          var className = String(rows[i][1] || '').trim();
-          if (name && className) {
-            Storage.addStudent(name, className);
-            count++;
-          }
-        }
-
-        render();
-        window.CF.Feedback.refreshStudentList();
-        showToast('成功导入 ' + count + ' 名学生');
+        rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
       } catch (err) {
         showToast('导入失败，请检查文件格式');
-        console.error(err);
+        return;
       }
+
+      if (!rows || rows.length <= 1) {
+        showToast('文件中没有找到学生数据');
+        return;
+      }
+
+      // Step 2: Add students
+      for (var i = 1; i < rows.length; i++) {
+        var row = rows[i];
+        if (!row) continue;
+        var name = String(row[0] || '').trim();
+        var className = String(row[1] || '').trim();
+        if (name && className) {
+          Storage.addStudent(name, className);
+          count++;
+        }
+      }
+
+      if (count === 0) {
+        showToast('未找到有效数据，请确保第一列为姓名、第二列为班级');
+        return;
+      }
+
+      // Step 3: Refresh UI
+      render();
+      showToast('成功导入 ' + count + ' 名学生');
     };
     reader.readAsArrayBuffer(file);
   }

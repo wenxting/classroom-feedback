@@ -8,3 +8,11 @@ desktop.ini
 .idea/
 *.swp
 *.swo
+
+# Capacitor / Android
+android/
+www/
+node_modules/
+capacitor.config.json
+package.json
+package-lock.json

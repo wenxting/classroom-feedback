@@ -8,13 +8,13 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
-  <title>课堂反馈生成器</title>
+  <title>课堂反馈</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
   <div class="app-container">
     <header class="app-header">
-      <h1>课堂反馈生成器</h1>
+      <h1>课堂反馈</h1>
     </header>
 
     <main class="tab-content">
@@ -35,17 +35,16 @@
               </div>
             </div>
             <div class="form-group">
-              <label>学生姓名（可多选）</label>
-              <div class="student-check-container" id="fb-student-container">
-                <div class="student-check-header">
-                  <label class="check-all-label">
-                    <input type="checkbox" id="fb-select-all"> 全选
-                  </label>
-                  <span class="selected-count" id="fb-selected-count">未选择</span>
-                </div>
-                <div class="student-check-list" id="fb-student-list">
-                  <div class="empty-hint" id="fb-student-empty">暂无学生，请先在「学生管理」中添加</div>
-                </div>
+              <label for="fb-student-input">学生姓名</label>
+              <input type="text" id="fb-student-input" placeholder="输入姓名，或从下方名单勾选（输入文字可筛选）" autocomplete="off">
+              <div class="student-filter-bar">
+                <label class="check-all-label">
+                  <input type="checkbox" id="fb-select-all"> 全选
+                </label>
+                <span class="selected-count" id="fb-selected-count">未选择</span>
+              </div>
+              <div class="student-filter-list" id="fb-student-list">
+                <div class="empty-hint" id="fb-student-empty">暂无学生，请先在「学生管理」中添加</div>
               </div>
             </div>
             <div class="form-row">
@@ -189,6 +188,12 @@
           <div class="preset-list" id="preset-time-list"></div>
         </div>
 
+        <div class="card">
+          <h2 class="card-title">使用统计</h2>
+          <p>已生成反馈：<strong id="stat-count">0</strong> 条</p>
+          <p class="hint-text">历史记录自动保留最近 30 天</p>
+        </div>
+
         <div class="card card-danger">
           <h2 class="card-title">危险操作</h2>
           <p class="hint-text">清除所有学生、历史记录、预设和设置数据，此操作不可恢复</p>
@@ -219,7 +224,7 @@
 
   <div id="toast" class="toast"></div>
 
-  <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+  <script src="js/xlsx.full.min.js"></script>
   <script src="js/storage.js"></script>
   <script src="js/roster.js"></script>
   <script src="js/feedback.js"></script>

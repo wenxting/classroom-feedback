@@ -31,14 +31,14 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   font-size: 15px;
   color: var(--text);
-  background: #d0d0d0;
+  background: #e8f4fd;
   line-height: 1.5;
   -webkit-tap-highlight-color: transparent;
   -webkit-font-smoothing: antialiased;
 }
 
 .app-container {
-  max-width: 480px;
+  width: 100%;
   height: 100vh;
   height: 100dvh;
   margin: 0 auto;
@@ -293,21 +293,12 @@ body {
   font-size: 11px;
 }
 
-/* Student Checkbox List */
-.student-check-container {
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: #fafbfc;
-  overflow: hidden;
-}
-
-.student-check-header {
+/* Student Filter List */
+.student-filter-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 12px;
-  background: #f0f4f8;
-  border-bottom: 1px solid var(--border);
+  padding: 8px 4px 8px 0;
 }
 
 .check-all-label {
@@ -325,25 +316,44 @@ body {
   font-weight: 500;
 }
 
-.student-check-list {
-  max-height: 180px;
+.student-filter-list {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: #fafbfc;
+  min-height: 52px;
+  max-height: 140px;
   overflow-y: auto;
-  padding: 4px 0;
 }
 
-.student-check-item {
+.student-filter-list .empty-hint {
+  padding: 16px;
+  font-size: 13px;
+  text-align: center;
+  color: var(--text-hint);
+}
+
+.student-filter-list label {
   display: flex;
   align-items: center;
-  padding: 8px 12px;
+  padding: 10px 12px;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: background 0.1s;
+  border-bottom: 1px solid #f0f0f0;
 }
 
-.student-check-item:active {
+.student-filter-list label:last-child {
+  border-bottom: none;
+}
+
+.student-filter-list label:active {
   background: #e8f0f8;
 }
 
-.student-check-item input[type="checkbox"] {
+.student-filter-list label.filtered-out {
+  display: none;
+}
+
+.student-filter-list input[type="checkbox"] {
   width: 18px;
   height: 18px;
   margin-right: 10px;
@@ -351,13 +361,13 @@ body {
   flex-shrink: 0;
 }
 
-.student-check-item .check-name {
+.student-filter-list .check-name {
   font-weight: 500;
   font-size: 14px;
   flex: 1;
 }
 
-.student-check-item .check-class {
+.student-filter-list .check-class {
   font-size: 12px;
   color: var(--text-hint);
 }
