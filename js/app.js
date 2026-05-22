@@ -41,6 +41,10 @@
         case 'copy-all':
           window.CF.Feedback.copyAll();
           break;
+        case 'fill-preset':
+          var targetEl = document.getElementById(target.dataset.target);
+          if (targetEl) { targetEl.value = target.dataset.value; targetEl.focus(); }
+          break;
         case 'clear-form':
           window.CF.Feedback.clearForm();
           break;

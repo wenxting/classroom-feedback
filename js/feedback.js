@@ -121,20 +121,18 @@
   function refreshDatalists() {
     var settings = Storage.getSettings();
 
-    var types = [
-      { id: 'subject-presets', list: settings.subjectPresets || [] },
-      { id: 'teacher-presets', list: settings.teacherPresets || [] },
-      { id: 'time-presets', list: settings.timePresets || [] }
-    ];
+    // Render preset tag buttons for subject, teacher, time
+    renderPresetRow('preset-row-subject', settings.subjectPresets || [], 'fb-subject');
+    renderPresetRow('preset-row-teacher', settings.teacherPresets || [], 'fb-teacher');
+    renderPresetRow('preset-row-time', settings.timePresets || [], 'fb-time');
+  }
 
-    types.forEach(function(t) {
-      var datalist = document.getElementById(t.id);
-      if (datalist) {
-        datalist.innerHTML = t.list.map(function(v) {
-          return '<option value="' + escapeHtml(v) + '">';
-        }).join('');
-      }
-    });
+  function renderPresetRow(rowId, list, inputId) {
+    var row = document.getElementById(rowId);
+    if (!row) return;
+    row.innerHTML = list.map(function(v) {
+      return '<button type="button" class="preset-btn" data-action="fill-preset" data-target="' + inputId + '" data-value="' + escapeHtml(v) + '">' + escapeHtml(v) + '</button>';
+    }).join('');
   }
 
   function setupAutoSave() {
