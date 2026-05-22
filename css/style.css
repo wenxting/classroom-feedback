@@ -152,13 +152,14 @@ body {
 }
 
 .form-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 12px;
 }
 
-.form-row .half {
-  flex: 1;
-  min-width: 0;
+.form-row .half input,
+.form-row .half select {
+  width: 100%;
 }
 
 /* Preset tag buttons below inputs */
