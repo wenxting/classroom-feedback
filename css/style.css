@@ -156,11 +156,6 @@ body {
   grid-template-columns: 1fr 1fr;
 }
 
-.form-row.date-row {
-  grid-template-columns: 3fr 5fr;
-  gap: 12px;
-}
-
 .form-row .half input,
 .form-row .half select {
   width: 100%;
