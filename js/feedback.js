@@ -184,6 +184,7 @@
           document.getElementById('fb-student-input').value = checked[0].value;
           showStudentHistory(checked[0].value);
         }
+        renderBatchTable();
         // Update select all state
         var allChecks = document.querySelectorAll('.fb-student-check');
         var allChecked = Array.prototype.every.call(allChecks, function(c) { return c.checked; });
@@ -199,6 +200,7 @@
       });
       updateSelectedCount();
       saveDraftStudents();
+      renderBatchTable();
     });
 
     // Filter student list as user types, and force refresh on focus
@@ -268,48 +270,6 @@
       '课堂表现：' + data.performance + '\n' +
       '\n' +
       '作业布置与完成情况：' + data.homework;
-  }
-
-  function generateFeedback() {
-    var manualInput = document.getElementById('fb-student-input').value.trim();
-    var selectedStudents = manualInput ? [manualInput] : getCheckedStudentNames();
-    var data = getFormData();
-
-    if (selectedStudents.length === 0) { showToast('请输入学生姓名或从名单勾选'); return null; }
-    if (!data.subject) { showToast('请输入科目'); return null; }
-
-    var previewArea = document.getElementById('preview-area');
-    var batchList = document.getElementById('batch-preview-list');
-
-    var html = '';
-    selectedStudents.forEach(function(studentName) {
-      var text = buildFeedbackText(data, studentName);
-      // Save each to history
-      var record = Object.assign({}, data, { studentName: studentName });
-      Storage.addFeedback(record);
-
-      html += '<div class="batch-preview-item">' +
-        '<div class="batch-preview-header">' + escapeHtml(studentName) + '</div>' +
-        '<textarea class="preview-text" data-student="' + escapeHtml(studentName) + '">' + escapeHtml(text) + '</textarea>' +
-        '<div class="preview-actions">' +
-          '<button class="btn btn-primary" data-action="copy-single" data-student="' + escapeHtml(studentName) + '">复制</button>' +
-          '<button class="btn btn-secondary" data-action="share-single" data-student="' + escapeHtml(studentName) + '">分享</button>' +
-        '</div>' +
-      '</div>';
-    });
-
-    batchList.innerHTML = html;
-    previewArea.style.display = 'block';
-    previewArea.scrollIntoView({ behavior: 'smooth' });
-
-    // Store generated texts for copy-all
-    previewArea._generatedTexts = {};
-    selectedStudents.forEach(function(studentName) {
-      previewArea._generatedTexts[studentName] = buildFeedbackText(data, studentName);
-    });
-
-    localStorage.removeItem('cf_draft');
-    return true;
   }
 
   function copySingle(studentName) {
@@ -527,6 +487,175 @@
     showToast('已填充科目、督学师、时间段');
   }
 
+  function renderBatchTable() {
+    var checked = document.querySelectorAll('.fb-student-check:checked');
+    var area = document.getElementById('batch-table-area');
+    var table = document.getElementById('batch-table');
+    if (!area || !table) return;
+
+    if (checked.length === 0) {
+      area.style.display = 'none';
+      return;
+    }
+
+    area.style.display = '';
+    var data = getFormData();
+
+    // Build header + rows
+    var html = '<div class="batch-row header">' +
+      '<div class="batch-cell name">学生</div>' +
+      '<div class="batch-cell" style="width:60px">正确率%</div>' +
+      '<div class="batch-cell" style="width:80px">掌握</div>' +
+      '<div class="batch-cell">建议提升</div>' +
+      '<div class="batch-cell" style="width:36px">AI</div>' +
+      '</div>';
+
+    for (var i = 0; i < checked.length; i++) {
+      var s = checked[i];
+      var sid = 'bt-' + i;
+      html += '<div class="batch-row" data-student="' + escapeHtml(s.value) + '">' +
+        '<div class="batch-cell name">' + escapeHtml(s.value) + '</div>' +
+        '<div class="batch-cell"><input type="text" id="' + sid + '-acc" value="' + escapeHtml(data.accuracy) + '" placeholder="' + escapeHtml(data.accuracy || '80') + '"></div>' +
+        '<div class="batch-cell"><input type="text" id="' + sid + '-mas" value="' + escapeHtml(data.mastery) + '" placeholder="' + escapeHtml(data.mastery || '7/8') + '"></div>' +
+        '<div class="batch-cell"><input type="text" id="' + sid + '-imp" value="" placeholder="可选"></div>' +
+        '<div class="batch-cell"><button type="button" class="btn btn-ai btn-sm" data-action="ai-expand-row" data-row="' + i + '">AI</button></div>' +
+        '</div>';
+    }
+
+    table.innerHTML = html;
+  }
+
+  function aiExpandRow(rowIndex) {
+    var settings = Storage.getSettings();
+    if (!settings.apiKey) { showToast('请先设置 API Key'); return; }
+
+    var checked = document.querySelectorAll('.fb-student-check:checked');
+    if (rowIndex >= checked.length) return;
+    var studentName = checked[rowIndex].value;
+
+    var btn = document.querySelector('[data-action="ai-expand-row"][data-row="' + rowIndex + '"]');
+    if (btn) { btn.textContent = '...'; btn.classList.add('loading'); }
+
+    var data = getFormData();
+    var accEl = document.getElementById('bt-' + rowIndex + '-acc');
+    var masEl = document.getElementById('bt-' + rowIndex + '-mas');
+    var rowAcc = accEl ? accEl.value : data.accuracy;
+    var rowMas = masEl ? masEl.value : data.mastery;
+    var masteryNote = rowMas ? '\n（掌握比例 ' + rowMas + ' = 本节课涉及的知识点中，学生掌握的比例情况）' : '';
+
+    var info = '日期：' + data.date + '\n时间：' + data.time +
+      '\n学生姓名：' + studentName + '\n科目：' + data.subject +
+      '\n督学师：' + data.teacher + '\n学习内容：' + data.content +
+      '\n正确率：' + rowAcc + '%\n掌握比例：' + rowMas + masteryNote;
+
+    var prompt = '你是一位专业督学师。根据以下学生课堂信息，给出一段具体的建议提升内容（50-100字），指出知识薄弱点和具体练习方向。不需要标题，不要提及学生姓名，直接写内容。\n\n' + info;
+
+    fetch('https://api.deepseek.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + settings.apiKey },
+      body: JSON.stringify({
+        model: 'deepseek-chat',
+        messages: [
+          { role: 'system', content: '你是一位经验丰富的专业督学师。回复简洁专业，不使用markdown格式，不要提及学生姓名。' },
+          { role: 'user', content: prompt }
+        ],
+        max_tokens: 300, temperature: 0.7
+      })
+    }).then(function(res) {
+      if (!res.ok) throw new Error('API error ' + res.status);
+      return res.json();
+    }).then(function(json) {
+      var text = json.choices[0].message.content.trim();
+      var impEl = document.getElementById('bt-' + rowIndex + '-imp');
+      if (impEl) impEl.value = text;
+    }).catch(function(err) {
+      showToast('AI 失败，请检查 API Key');
+      console.error(err);
+    }).finally(function() {
+      if (btn) { btn.textContent = 'AI'; btn.classList.remove('loading'); }
+    });
+  }
+
+  function aiExpandAll() {
+    var settings = Storage.getSettings();
+    if (!settings.apiKey) { showToast('请先设置 API Key'); return; }
+    var checked = document.querySelectorAll('.fb-student-check:checked');
+    if (checked.length === 0) { showToast('请先勾选学生'); return; }
+    showToast('正在生成 ' + checked.length + ' 名学生的建议提升...');
+    var i = 0;
+    function next() {
+      if (i >= checked.length) { showToast('全部生成完毕'); return; }
+      aiExpandRow(i);
+      i++;
+      setTimeout(next, 1500);
+    }
+    next();
+  }
+
+  function generateFeedback() {
+    var checked = document.querySelectorAll('.fb-student-check:checked');
+    var data = getFormData();
+    var manualInput = document.getElementById('fb-student-input').value.trim();
+    var selectedStudents = [];
+
+    if (manualInput && checked.length === 0) {
+      selectedStudents = [manualInput];
+    } else if (checked.length > 0) {
+      for (var i = 0; i < checked.length; i++) {
+        selectedStudents.push(checked[i].value);
+      }
+    }
+
+    if (selectedStudents.length === 0) { showToast('请输入学生姓名或从名单勾选'); return null; }
+    if (!data.subject) { showToast('请输入科目'); return null; }
+
+    var previewArea = document.getElementById('preview-area');
+    var batchList = document.getElementById('batch-preview-list');
+    var html = '';
+
+    for (var i = 0; i < selectedStudents.length; i++) {
+      var studentName = selectedStudents[i];
+      // Get per-student data from table if available
+      var rowAcc = data.accuracy, rowMas = data.mastery, rowImp = data.improvement;
+      if (checked.length > 0) {
+        var accEl = document.getElementById('bt-' + i + '-acc');
+        var masEl = document.getElementById('bt-' + i + '-mas');
+        var impEl = document.getElementById('bt-' + i + '-imp');
+        if (accEl && accEl.value) rowAcc = accEl.value;
+        if (masEl && masEl.value) rowMas = masEl.value;
+        if (impEl && impEl.value) rowImp = impEl.value;
+      }
+
+      var text = '课堂反馈\n日期：' + formatDate(data.date) + '\n时间：' + data.time +
+        '\n学生姓名：' + studentName + '\n科目：' + data.subject +
+        '\n督学师：' + data.teacher + '\n学习内容：' + data.content +
+        '\n\n正确率：' + rowAcc + '%\n掌握比例：' + rowMas +
+        '\n建议提升：' + rowImp +
+        '\n\n课堂表现：' + data.performance +
+        '\n\n作业布置与完成情况：' + data.homework;
+
+      var record = { date: data.date, time: data.time, studentName: studentName,
+        subject: data.subject, teacher: data.teacher, content: data.content,
+        accuracy: rowAcc, mastery: rowMas, improvement: rowImp,
+        performance: data.performance, homework: data.homework };
+      Storage.addFeedback(record);
+
+      html += '<div class="batch-preview-item">' +
+        '<div class="batch-preview-header">' + escapeHtml(studentName) + '</div>' +
+        '<textarea class="preview-text" data-student="' + escapeHtml(studentName) + '">' + escapeHtml(text) + '</textarea>' +
+        '<div class="preview-actions">' +
+          '<button class="btn btn-primary" data-action="copy-single" data-student="' + escapeHtml(studentName) + '">复制</button>' +
+          '<button class="btn btn-secondary" data-action="share-single" data-student="' + escapeHtml(studentName) + '">分享</button>' +
+        '</div></div>';
+    }
+
+    batchList.innerHTML = html;
+    previewArea.style.display = 'block';
+    previewArea.scrollIntoView({ behavior: 'smooth' });
+    localStorage.removeItem('cf_draft');
+    return true;
+  }
+
   function escapeHtml(str) {
     var div = document.createElement('div');
     div.textContent = str;
@@ -548,6 +677,9 @@
     copyAll: copyAll,
     clearForm: clearForm,
     aiExpand: aiExpand,
+    aiExpandRow: aiExpandRow,
+    aiExpandAll: aiExpandAll,
+    renderBatchTable: renderBatchTable,
     showStudentHistory: showStudentHistory,
     quickFill: quickFill
   };

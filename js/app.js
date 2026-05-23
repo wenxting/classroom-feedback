@@ -48,6 +48,13 @@
         case 'ai-expand':
           window.CF.Feedback.aiExpand(target.dataset.target);
           break;
+        case 'ai-expand-row':
+          e.stopPropagation();
+          window.CF.Feedback.aiExpandRow(parseInt(target.dataset.row));
+          break;
+        case 'ai-expand-all':
+          window.CF.Feedback.aiExpandAll();
+          break;
         case 'quick-fill':
           window.CF.Feedback.quickFill();
           break;
