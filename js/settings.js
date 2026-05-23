@@ -10,6 +10,8 @@
     document.getElementById('set-time').value = settings.defaultTime || '';
     document.getElementById('set-homework').value = settings.defaultHomework || '';
     document.getElementById('set-apikey').value = settings.apiKey || '';
+    document.getElementById('set-aistyle').value = settings.aiStyle || '';
+    document.getElementById('set-aisamples').value = settings.aiSamples || '';
     var retEl = document.getElementById('set-retention');
     if (retEl) retEl.value = settings.historyRetention || 'never';
     renderPresets();
@@ -35,6 +37,8 @@
     settings.defaultTime = document.getElementById('set-time').value.trim();
     settings.defaultHomework = document.getElementById('set-homework').value.trim();
     settings.apiKey = document.getElementById('set-apikey').value.trim();
+    settings.aiStyle = document.getElementById('set-aistyle').value.trim();
+    settings.aiSamples = document.getElementById('set-aisamples').value.trim();
     Storage.saveSettings(settings);
     window.CF.Feedback.refreshDatalists();
     window.CF.Feedback.reloadDefaults();

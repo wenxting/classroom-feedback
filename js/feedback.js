@@ -394,10 +394,16 @@
       }
     }
 
+    var aiStyle = settings.aiStyle || '';
+    var aiSamples = settings.aiSamples || '';
+    var styleInject = aiStyle ? '\n请按以下风格写作：' + aiStyle : '';
+    var sampleInject = aiSamples ? '\n请模仿以下范文的语气和用词习惯：\n' + aiSamples : '';
+
     var isImprovement = targetId === 'fb-improvement';
     var prompt = isImprovement
       ? '这是培训机构一对一/小班辅导场景。根据以下学生信息，直接指出1-2个知识薄弱点和针对性练习方向（30-40字）。不用"同学"等学校用词，不提姓名和作业。\n\n' + info
       : '这是培训机构一对一/小班辅导场景。根据以下学生信息，从学习态度、专注程度、理解吸收、互动主动性四个维度评价（80-120字）。不用"同学""上课听讲""课堂纪律"等学校用词，不提姓名和作业。\n\n' + info;
+    prompt += styleInject + sampleInject;
 
     fetch('https://api.deepseek.com/v1/chat/completions', {
       method: 'POST',
@@ -564,7 +570,10 @@
     var prompt = '这是一家文化课培训机构的一对一/小班辅导场景（非学校课堂）。根据以下学生信息和历史记录，请严格按格式生成两段内容：\n' +
       '第一段用【建议提升】开头，直接指出1-2个知识薄弱点及针对性练习方向（30-40字即可，简洁扼要）。\n' +
       '第二段用【课堂表现】开头，从学习态度、专注程度、理解吸收情况、互动主动性四个维度客观评价（80-120字），既要肯定优点也要如实指出不足。\n' +
-      '请结合该生历史记录分析进步或退步趋势。用词注意：培训机构辅导场景，不用"同学""上课听讲"等学校词汇。不提姓名和作业。\n\n' + info;
+      '请结合该生历史记录分析进步或退步趋势。用词注意：培训机构辅导场景，不用"同学""上课听讲"等学校词汇。不提姓名和作业。\n' +
+      (settings.aiStyle ? '写作风格：' + settings.aiStyle + '\n' : '') +
+      (settings.aiSamples ? '范文参考：\n' + settings.aiSamples + '\n' : '') +
+      '\n' + info;
 
     fetch('https://api.deepseek.com/v1/chat/completions', {
       method: 'POST',
