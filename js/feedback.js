@@ -4,25 +4,19 @@
   var Storage = window.CF.Storage;
 
   function init() {
-    var settings = Storage.getSettings();
     setTodayDate();
-
-    if (settings.defaultTime) {
-      document.getElementById('fb-time').value = settings.defaultTime;
-    }
-    if (settings.defaultSubject) {
-      document.getElementById('fb-subject').value = settings.defaultSubject;
-    }
-    if (settings.defaultTeacher) {
-      document.getElementById('fb-teacher').value = settings.defaultTeacher;
-    }
-    if (settings.defaultHomework) {
-      document.getElementById('fb-homework').value = settings.defaultHomework;
-    }
-
+    reloadDefaults();
     refreshStudentList();
     refreshDatalists();
     setupAutoSave();
+  }
+
+  function reloadDefaults() {
+    var settings = Storage.getSettings();
+    if (settings.defaultSubject) document.getElementById('fb-subject').value = settings.defaultSubject;
+    if (settings.defaultTeacher) document.getElementById('fb-teacher').value = settings.defaultTeacher;
+    if (settings.defaultTime) document.getElementById('fb-time').value = settings.defaultTime;
+    document.getElementById('fb-homework').value = settings.defaultHomework || '';
   }
 
   function setTodayDate() {
@@ -552,9 +546,9 @@
       '\n正确率：' + rowAcc + '%\n掌握比例：' + rowMas + masteryNote;
 
     var prompt = '你是一位专业督学师。根据以下学生课堂信息，请严格按格式生成两段内容：\n' +
-      '第一段用【建议提升】开头，指出知识薄弱点和具体练习方向（50-100字）。\n' +
-      '第二段用【课堂表现】开头，客观评价，既要肯定优点也要如实指出不足（如纪律、态度、专注度等问题），给出改进建议（80-150字）。\n' +
-      '不要提及学生姓名。\n\n' + info;
+      '第一段用【建议提升】开头，直接指出1-2个知识薄弱点及练习方向（30-40字即可，简洁扼要）。\n' +
+      '第二段用【课堂表现】开头，从听课状态、互动情况、纪律专注度、改进方向四个维度客观评价（80-120字），既要肯定优点也要如实指出不足。\n' +
+      '不要提及学生姓名，不要提及作业完成情况。\n\n' + info;
 
     fetch('https://api.deepseek.com/v1/chat/completions', {
       method: 'POST',
@@ -562,10 +556,10 @@
       body: JSON.stringify({
         model: 'deepseek-chat',
         messages: [
-          { role: 'system', content: '你是一位经验丰富的专业督学师。评价客观平衡，既要鼓励进步也要指出不足。不使用markdown格式，不提及学生姓名。严格用【建议提升】和【课堂表现】作为两段的开头标记。' },
+          { role: 'system', content: '你是一位经验丰富的专业督学师。评价客观平衡，从听课/互动/纪律/改进四维度分析。不提及学生姓名和作业情况。严格用【建议提升】和【课堂表现】作为标记。' },
           { role: 'user', content: prompt }
         ],
-        max_tokens: 500, temperature: 0.7
+        max_tokens: 350, temperature: 0.7
       })
     }).then(function(res) {
       if (!res.ok) throw new Error('API error ' + res.status);
@@ -708,6 +702,7 @@
     aiExpandRow: aiExpandRow,
     aiExpandAll: aiExpandAll,
     renderBatchTable: renderBatchTable,
+    reloadDefaults: reloadDefaults,
     showStudentHistory: showStudentHistory,
     quickFill: quickFill
   };

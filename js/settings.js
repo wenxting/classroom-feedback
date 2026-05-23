@@ -37,6 +37,7 @@
     settings.apiKey = document.getElementById('set-apikey').value.trim();
     Storage.saveSettings(settings);
     window.CF.Feedback.refreshDatalists();
+    window.CF.Feedback.reloadDefaults();
     showToast('设置已保存');
   }
 

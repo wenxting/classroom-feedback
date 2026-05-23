@@ -128,6 +128,7 @@
     if (tabName === 'feedback') {
       var input = document.getElementById('fb-student-input');
       if (input) input.value = '';
+      window.CF.Feedback.reloadDefaults();
       window.CF.Feedback.refreshStudentList();
     }
     if (tabName === 'settings') {
