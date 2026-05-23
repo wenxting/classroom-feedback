@@ -69,8 +69,12 @@
                 <input type="text" id="fb-accuracy" placeholder="如：80">
               </div>
               <div class="form-group half">
-                <label for="fb-mastery">掌握比例</label>
-                <input type="text" id="fb-mastery" placeholder="如：7/8">
+                <label for="fb-mastery-a">掌握比例</label>
+                <div class="mastery-row">
+                  <input type="number" id="fb-mastery-a" placeholder="6" class="mastery-input">
+                  <span class="mastery-sep">/</span>
+                  <input type="number" id="fb-mastery-b" placeholder="7" class="mastery-input">
+                </div>
               </div>
             </div>
             <div class="form-group">
@@ -89,7 +93,7 @@
             </div>
             <div class="form-group">
               <label for="fb-homework">作业布置与完成情况</label>
-              <textarea id="fb-homework" rows="2">作业已完成，课后多练习巩固知识点</textarea>
+              <textarea id="fb-homework" rows="2"></textarea>
             </div>
           </form>
           <div class="form-actions">
@@ -165,6 +169,10 @@
           <div class="form-group">
             <label for="set-time">默认时间段</label>
             <input type="text" id="set-time" placeholder="如：15:00-17:00">
+          </div>
+          <div class="form-group">
+            <label for="set-homework">默认作业评语</label>
+            <input type="text" id="set-homework" placeholder="如：作业已完成，课后多练习巩固知识点">
           </div>
           <div class="form-group">
             <label for="set-apikey">DeepSeek API Key</label>

@@ -8,6 +8,7 @@
     document.getElementById('set-subject').value = settings.defaultSubject || '';
     document.getElementById('set-teacher').value = settings.defaultTeacher || '';
     document.getElementById('set-time').value = settings.defaultTime || '';
+    document.getElementById('set-homework').value = settings.defaultHomework || '';
     document.getElementById('set-apikey').value = settings.apiKey || '';
     var retEl = document.getElementById('set-retention');
     if (retEl) retEl.value = settings.historyRetention || 'never';
@@ -32,6 +33,7 @@
     settings.defaultSubject = document.getElementById('set-subject').value.trim();
     settings.defaultTeacher = document.getElementById('set-teacher').value.trim();
     settings.defaultTime = document.getElementById('set-time').value.trim();
+    settings.defaultHomework = document.getElementById('set-homework').value.trim();
     settings.apiKey = document.getElementById('set-apikey').value.trim();
     Storage.saveSettings(settings);
     window.CF.Feedback.refreshDatalists();

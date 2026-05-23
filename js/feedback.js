@@ -16,6 +16,9 @@
     if (settings.defaultTeacher) {
       document.getElementById('fb-teacher').value = settings.defaultTeacher;
     }
+    if (settings.defaultHomework) {
+      document.getElementById('fb-homework').value = settings.defaultHomework;
+    }
 
     refreshStudentList();
     refreshDatalists();
@@ -175,6 +178,12 @@
       if (e.target.classList.contains('fb-student-check')) {
         updateSelectedCount();
         saveDraftStudents();
+        // Auto-fill input if single student checked
+        var checked = document.querySelectorAll('.fb-student-check:checked');
+        if (checked.length === 1) {
+          document.getElementById('fb-student-input').value = checked[0].value;
+          showStudentHistory(checked[0].value);
+        }
         // Update select all state
         var allChecks = document.querySelectorAll('.fb-student-check');
         var allChecked = Array.prototype.every.call(allChecks, function(c) { return c.checked; });
@@ -223,7 +232,11 @@
       teacher: document.getElementById('fb-teacher').value,
       content: document.getElementById('fb-content').value,
       accuracy: document.getElementById('fb-accuracy').value,
-      mastery: document.getElementById('fb-mastery').value,
+      mastery: (function() {
+        var a = document.getElementById('fb-mastery-a').value;
+        var b = document.getElementById('fb-mastery-b').value;
+        return (a && b) ? a + '/' + b : (a || b || '');
+      })(),
       improvement: document.getElementById('fb-improvement').value,
       performance: document.getElementById('fb-performance').value,
       homework: document.getElementById('fb-homework').value
@@ -357,7 +370,9 @@
   }
 
   function clearForm() {
-    var fields = ['student-input', 'subject', 'teacher', 'content', 'accuracy', 'mastery', 'improvement', 'performance'];
+    var fields = ['student-input', 'subject', 'teacher', 'content', 'accuracy', 'improvement', 'performance'];
+    document.getElementById('fb-mastery-a').value = '';
+    document.getElementById('fb-mastery-b').value = '';
     fields.forEach(function(f) {
       document.getElementById('fb-' + f).value = '';
     });
@@ -375,6 +390,7 @@
     if (settings.defaultTeacher) {
       document.getElementById('fb-teacher').value = settings.defaultTeacher;
     }
+    document.getElementById('fb-homework').value = settings.defaultHomework || '';
 
     // Clear student selections
     Array.prototype.forEach.call(document.querySelectorAll('.fb-student-check'), function(c) { c.checked = false; });
@@ -435,7 +451,7 @@
       body: JSON.stringify({
         model: 'deepseek-chat',
         messages: [
-          { role: 'system', content: '你是一位经验丰富的专业督学师，善于分析学生情况并给出针对性的建议。回复简洁专业，不使用markdown格式。' },
+          { role: 'system', content: '你是一位经验丰富的专业督学师，善于分析学生情况并给出针对性的建议。回复简洁专业，不使用markdown格式，不要在回复中提及学生姓名。' },
           { role: 'user', content: prompt }
         ],
         max_tokens: 300,

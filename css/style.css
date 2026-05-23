@@ -154,6 +154,26 @@ body {
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* Mastery ratio input */
+.mastery-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.mastery-input {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+}
+
+.mastery-sep {
+  font-size: 18px;
+  color: var(--text-hint);
+  font-weight: 500;
 }
 
 .form-row .half input,
