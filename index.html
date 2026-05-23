@@ -23,29 +23,16 @@
         <div class="card">
           <h2 class="card-title">反馈信息</h2>
           <form id="feedback-form" autocomplete="off">
-            <div class="form-group">
-              <label for="fb-date">日期</label>
-              <input type="date" id="fb-date">
-            </div>
-            <div class="form-group">
-              <label for="fb-time">时间</label>
-              <input type="text" id="fb-time" placeholder="如：15:00-17:00" autocomplete="off">
-              <div class="preset-row" id="preset-row-time"></div>
-            </div>
-            <div class="form-group">
-              <label for="fb-student-input">学生姓名</label>
-              <input type="text" id="fb-student-input" placeholder="输入姓名，或从下方名单勾选（输入文字可筛选）" autocomplete="off">
-              <div class="student-filter-bar">
-                <label class="check-all-label">
-                  <input type="checkbox" id="fb-select-all"> 全选
-                </label>
-                <span class="selected-count" id="fb-selected-count">未选择</span>
+            <div class="form-row">
+              <div class="form-group half">
+                <label for="fb-date">日期</label>
+                <input type="date" id="fb-date">
               </div>
-              <div class="student-filter-list" id="fb-student-list">
-                <div class="empty-hint" id="fb-student-empty">暂无学生，请先在「学生管理」中添加</div>
+              <div class="form-group half">
+                <label for="fb-time">时间</label>
+                <input type="text" id="fb-time" placeholder="如：15:00-17:00" autocomplete="off">
+                <div class="preset-row" id="preset-row-time"></div>
               </div>
-              <div id="fb-history-summary" class="history-summary" style="display:none"></div>
-              <button type="button" id="fb-quick-fill" class="btn btn-outline btn-sm" style="display:none;margin-top:8px" data-action="quick-fill">填充上次信息</button>
             </div>
             <div class="form-row">
               <div class="form-group half">
@@ -60,35 +47,36 @@
               </div>
             </div>
             <div class="form-group">
+              <label for="fb-student-input">学生姓名</label>
+              <input type="text" id="fb-student-input" placeholder="输入姓名，或从下方名单勾选（输入文字可筛选）" autocomplete="off">
+              <div class="student-filter-bar">
+                <label class="check-all-label">
+                  <input type="checkbox" id="fb-select-all"> 全选
+                </label>
+                <span class="selected-count" id="fb-selected-count">未选择</span>
+              </div>
+              <div class="student-filter-list" id="fb-student-list">
+                <div class="empty-hint" id="fb-student-empty">暂无学生，请先在「学生管理」中添加</div>
+              </div>
+              <div id="fb-history-summary" class="history-summary" style="display:none"></div>
+              <button type="button" id="fb-quick-fill" class="btn btn-outline btn-sm" style="display:none;margin-top:4px" data-action="quick-fill">填充上次信息</button>
+            </div>
+            <div class="form-group">
               <label for="fb-content">学习内容</label>
               <input type="text" id="fb-content" placeholder="如：卷子">
             </div>
             <div class="form-row">
               <div class="form-group half">
-                <label for="fb-accuracy">正确率（%）</label>
+                <label for="fb-accuracy">正确率默认值（%）</label>
                 <input type="text" id="fb-accuracy" placeholder="如：80">
               </div>
               <div class="form-group half">
-                <label for="fb-mastery-a">掌握比例</label>
+                <label for="fb-mastery-a">掌握默认值</label>
                 <div class="mastery-row">
                   <input type="number" id="fb-mastery-a" placeholder="6" class="mastery-input">
                   <span class="mastery-sep">/</span>
                   <input type="number" id="fb-mastery-b" placeholder="7" class="mastery-input">
                 </div>
-              </div>
-            </div>
-            <div class="form-group">
-              <label for="fb-improvement">建议提升</label>
-              <div class="ai-input-row">
-                <input type="text" id="fb-improvement" placeholder="如：圆的综合证明题">
-                <button type="button" class="btn btn-ai btn-sm" data-action="ai-expand" data-target="fb-improvement">AI</button>
-              </div>
-            </div>
-            <div class="form-group">
-              <label for="fb-performance">课堂表现</label>
-              <div class="ai-input-row">
-                <textarea id="fb-performance" rows="3" placeholder="描述学生的课堂表现..."></textarea>
-                <button type="button" class="btn btn-ai btn-sm" data-action="ai-expand" data-target="fb-performance">AI</button>
               </div>
             </div>
             <div class="form-group">
@@ -107,7 +95,7 @@
           <div class="batch-table-wrap">
             <div class="batch-table" id="batch-table"></div>
           </div>
-          <button class="btn btn-ai btn-full" style="margin-top:8px" data-action="ai-expand-all">一键 AI 生成全部建议提升</button>
+          <button class="btn btn-ai btn-full" style="margin-top:8px" data-action="ai-expand-all">一键 AI 生成全部（建议提升 + 课堂表现）</button>
         </div>
 
         <div id="preview-area" style="display:none">

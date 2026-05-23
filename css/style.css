@@ -88,17 +88,17 @@ body {
 .card {
   background: var(--card-bg);
   border-radius: var(--radius);
-  padding: 16px;
-  margin-bottom: 16px;
+  padding: 12px;
+  margin-bottom: 10px;
   box-shadow: var(--shadow);
 }
 
 .card-title {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   color: var(--primary);
-  margin-bottom: 12px;
-  padding-bottom: 8px;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
   border-bottom: 2px solid var(--border);
 }
 
@@ -112,14 +112,14 @@ body {
 
 /* Form Elements */
 .form-group {
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .form-group label {
   display: block;
-  font-size: 13px;
+  font-size: 12px;
   color: var(--text-secondary);
-  margin-bottom: 4px;
+  margin-bottom: 2px;
   font-weight: 500;
 }
 
@@ -127,10 +127,10 @@ body {
 .form-group select,
 .form-group textarea {
   width: 100%;
-  padding: 10px 12px;
+  padding: 7px 10px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  font-size: 15px;
+  font-size: 14px;
   color: var(--text);
   background: #fafbfc;
   transition: border-color 0.2s, box-shadow 0.2s;
@@ -154,7 +154,7 @@ body {
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  gap: 10px;
 }
 
 /* Mastery ratio input */
@@ -185,8 +185,8 @@ input[type="date"] {
   min-width: 0;
   max-width: 100%;
   -webkit-appearance: none;
-  padding: 10px 12px;
-  font-size: 15px;
+  padding: 7px 10px;
+  font-size: 14px;
   font-family: inherit;
 }
 
@@ -404,14 +404,14 @@ input[type="date"] {
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: #fafbfc;
-  min-height: 52px;
-  max-height: 140px;
+  min-height: 40px;
+  max-height: 110px;
   overflow-y: auto;
 }
 
 .student-filter-list .empty-hint {
-  padding: 16px;
-  font-size: 13px;
+  padding: 12px;
+  font-size: 12px;
   text-align: center;
   color: var(--text-hint);
 }
@@ -510,10 +510,10 @@ input[type="date"] {
 
 .batch-cell input {
   width: 100%;
-  padding: 5px 4px;
+  padding: 3px 2px;
   border: 1px solid #e8e8e8;
   border-radius: 4px;
-  font-size: 13px;
+  font-size: 12px;
   text-align: center;
   font-family: inherit;
   box-sizing: border-box;

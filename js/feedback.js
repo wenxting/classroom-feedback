@@ -141,7 +141,7 @@
   function setupAutoSave() {
     var form = document.getElementById('feedback-form');
     var saveKey = 'cf_draft';
-    var textFields = ['subject', 'teacher', 'content', 'accuracy', 'mastery', 'improvement', 'performance', 'homework'];
+    var textFields = ['subject', 'teacher', 'content', 'accuracy', 'homework'];
 
     try {
       var draft = JSON.parse(localStorage.getItem(saveKey));
@@ -239,8 +239,6 @@
         var b = document.getElementById('fb-mastery-b').value;
         return (a && b) ? a + '/' + b : (a || b || '');
       })(),
-      improvement: document.getElementById('fb-improvement').value,
-      performance: document.getElementById('fb-performance').value,
       homework: document.getElementById('fb-homework').value
     };
   }
@@ -330,7 +328,7 @@
   }
 
   function clearForm() {
-    var fields = ['student-input', 'subject', 'teacher', 'content', 'accuracy', 'improvement', 'performance'];
+    var fields = ['student-input', 'subject', 'teacher', 'content', 'accuracy'];
     document.getElementById('fb-mastery-a').value = '';
     document.getElementById('fb-mastery-b').value = '';
     fields.forEach(function(f) {
@@ -504,10 +502,11 @@
     // Build header + rows
     var html = '<div class="batch-row header">' +
       '<div class="batch-cell name">学生</div>' +
-      '<div class="batch-cell" style="width:60px">正确率%</div>' +
-      '<div class="batch-cell" style="width:80px">掌握</div>' +
-      '<div class="batch-cell">建议提升</div>' +
-      '<div class="batch-cell" style="width:36px">AI</div>' +
+      '<div class="batch-cell" style="width:56px">正确率%</div>' +
+      '<div class="batch-cell" style="width:66px">掌握</div>' +
+      '<div class="batch-cell" style="width:45%">建议提升</div>' +
+      '<div class="batch-cell" style="width:45%">课堂表现</div>' +
+      '<div class="batch-cell" style="width:32px">AI</div>' +
       '</div>';
 
     for (var i = 0; i < checked.length; i++) {
@@ -518,6 +517,7 @@
         '<div class="batch-cell"><input type="text" id="' + sid + '-acc" value="' + escapeHtml(data.accuracy) + '" placeholder="' + escapeHtml(data.accuracy || '80') + '"></div>' +
         '<div class="batch-cell"><input type="text" id="' + sid + '-mas" value="' + escapeHtml(data.mastery) + '" placeholder="' + escapeHtml(data.mastery || '7/8') + '"></div>' +
         '<div class="batch-cell"><input type="text" id="' + sid + '-imp" value="" placeholder="可选"></div>' +
+        '<div class="batch-cell"><input type="text" id="' + sid + '-perf" value="" placeholder="可选"></div>' +
         '<div class="batch-cell"><button type="button" class="btn btn-ai btn-sm" data-action="ai-expand-row" data-row="' + i + '">AI</button></div>' +
         '</div>';
     }
@@ -539,8 +539,8 @@
     var data = getFormData();
     var accEl = document.getElementById('bt-' + rowIndex + '-acc');
     var masEl = document.getElementById('bt-' + rowIndex + '-mas');
-    var rowAcc = accEl ? accEl.value : data.accuracy;
-    var rowMas = masEl ? masEl.value : data.mastery;
+    var rowAcc = accEl && accEl.value ? accEl.value : data.accuracy;
+    var rowMas = masEl && masEl.value ? masEl.value : data.mastery;
     var masteryNote = rowMas ? '\n（掌握比例 ' + rowMas + ' = 本节课涉及的知识点中，学生掌握的比例情况）' : '';
 
     var info = '日期：' + data.date + '\n时间：' + data.time +
@@ -548,7 +548,10 @@
       '\n督学师：' + data.teacher + '\n学习内容：' + data.content +
       '\n正确率：' + rowAcc + '%\n掌握比例：' + rowMas + masteryNote;
 
-    var prompt = '你是一位专业督学师。根据以下学生课堂信息，给出一段具体的建议提升内容（50-100字），指出知识薄弱点和具体练习方向。不需要标题，不要提及学生姓名，直接写内容。\n\n' + info;
+    var prompt = '你是一位专业督学师。根据以下学生课堂信息，请生成两段内容，用"---"分隔。\n' +
+      '第一段：建议提升（50-100字），指出知识薄弱点和具体练习方向。\n' +
+      '第二段：课堂表现评价（80-150字），语气温暖鼓励。\n' +
+      '不需要标题，不要提及学生姓名，直接写内容。\n\n' + info;
 
     fetch('https://api.deepseek.com/v1/chat/completions', {
       method: 'POST',
@@ -556,18 +559,23 @@
       body: JSON.stringify({
         model: 'deepseek-chat',
         messages: [
-          { role: 'system', content: '你是一位经验丰富的专业督学师。回复简洁专业，不使用markdown格式，不要提及学生姓名。' },
+          { role: 'system', content: '你是一位经验丰富的专业督学师。回复简洁专业，不使用markdown格式，不要提及学生姓名。两段内容用"---"分隔。' },
           { role: 'user', content: prompt }
         ],
-        max_tokens: 300, temperature: 0.7
+        max_tokens: 500, temperature: 0.7
       })
     }).then(function(res) {
       if (!res.ok) throw new Error('API error ' + res.status);
       return res.json();
     }).then(function(json) {
       var text = json.choices[0].message.content.trim();
+      var parts = text.split('---');
+      var imp = parts[0] ? parts[0].trim() : '';
+      var perf = parts[1] ? parts[1].trim() : '';
       var impEl = document.getElementById('bt-' + rowIndex + '-imp');
-      if (impEl) impEl.value = text;
+      var perfEl = document.getElementById('bt-' + rowIndex + '-perf');
+      if (impEl) impEl.value = imp;
+      if (perfEl) perfEl.value = perf;
     }).catch(function(err) {
       showToast('AI 失败，请检查 API Key');
       console.error(err);
@@ -616,14 +624,16 @@
     for (var i = 0; i < selectedStudents.length; i++) {
       var studentName = selectedStudents[i];
       // Get per-student data from table if available
-      var rowAcc = data.accuracy, rowMas = data.mastery, rowImp = data.improvement;
+      var rowAcc = data.accuracy, rowMas = data.mastery, rowImp = '', rowPerf = '';
       if (checked.length > 0) {
         var accEl = document.getElementById('bt-' + i + '-acc');
         var masEl = document.getElementById('bt-' + i + '-mas');
         var impEl = document.getElementById('bt-' + i + '-imp');
+        var perfEl = document.getElementById('bt-' + i + '-perf');
         if (accEl && accEl.value) rowAcc = accEl.value;
         if (masEl && masEl.value) rowMas = masEl.value;
         if (impEl && impEl.value) rowImp = impEl.value;
+        if (perfEl && perfEl.value) rowPerf = perfEl.value;
       }
 
       var text = '课堂反馈\n日期：' + formatDate(data.date) + '\n时间：' + data.time +
@@ -631,13 +641,13 @@
         '\n督学师：' + data.teacher + '\n学习内容：' + data.content +
         '\n\n正确率：' + rowAcc + '%\n掌握比例：' + rowMas +
         '\n建议提升：' + rowImp +
-        '\n\n课堂表现：' + data.performance +
+        '\n\n课堂表现：' + rowPerf +
         '\n\n作业布置与完成情况：' + data.homework;
 
       var record = { date: data.date, time: data.time, studentName: studentName,
         subject: data.subject, teacher: data.teacher, content: data.content,
         accuracy: rowAcc, mastery: rowMas, improvement: rowImp,
-        performance: data.performance, homework: data.homework };
+        performance: rowPerf, homework: data.homework };
       Storage.addFeedback(record);
 
       html += '<div class="batch-preview-item">' +
