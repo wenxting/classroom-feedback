@@ -550,10 +550,10 @@
       '\n督学师：' + data.teacher + '\n学习内容：' + data.content +
       '\n正确率：' + rowAcc + '%\n掌握比例：' + rowMas + masteryNote;
 
-    var prompt = '你是一位专业督学师。根据以下学生课堂信息，请生成两段内容，用"---"分隔。\n' +
-      '第一段：建议提升（50-100字），指出知识薄弱点和具体练习方向。\n' +
-      '第二段：课堂表现评价（80-150字），语气温暖鼓励。\n' +
-      '不需要标题，不要提及学生姓名，直接写内容。\n\n' + info;
+    var prompt = '你是一位专业督学师。根据以下学生课堂信息，请严格按格式生成两段内容：\n' +
+      '第一段用【建议提升】开头，指出知识薄弱点和具体练习方向（50-100字）。\n' +
+      '第二段用【课堂表现】开头，客观评价，既要肯定优点也要如实指出不足（如纪律、态度、专注度等问题），给出改进建议（80-150字）。\n' +
+      '不要提及学生姓名。\n\n' + info;
 
     fetch('https://api.deepseek.com/v1/chat/completions', {
       method: 'POST',
@@ -561,7 +561,7 @@
       body: JSON.stringify({
         model: 'deepseek-chat',
         messages: [
-          { role: 'system', content: '你是一位经验丰富的专业督学师。回复简洁专业，不使用markdown格式，不要提及学生姓名。两段内容用"---"分隔。' },
+          { role: 'system', content: '你是一位经验丰富的专业督学师。评价客观平衡，既要鼓励进步也要指出不足。不使用markdown格式，不提及学生姓名。严格用【建议提升】和【课堂表现】作为两段的开头标记。' },
           { role: 'user', content: prompt }
         ],
         max_tokens: 500, temperature: 0.7
@@ -571,9 +571,17 @@
       return res.json();
     }).then(function(json) {
       var text = json.choices[0].message.content.trim();
-      var parts = text.split('---');
-      var imp = parts[0] ? parts[0].trim() : '';
-      var perf = parts[1] ? parts[1].trim() : '';
+      var imp = '', perf = '';
+      var impIdx = text.indexOf('【课堂表现】');
+      if (impIdx > -1) {
+        imp = text.substring(0, impIdx).replace('【建议提升】', '').trim();
+        perf = text.substring(impIdx).replace('【课堂表现】', '').trim();
+      } else {
+        // Fallback: try splitting by double newline
+        var parts = text.split('\n\n');
+        imp = parts[0] ? parts[0].replace('【建议提升】', '').trim() : '';
+        perf = parts.slice(1).join('\n\n').replace('【课堂表现】', '').trim();
+      }
       var impEl = document.getElementById('bt-' + rowIndex + '-imp');
       var perfEl = document.getElementById('bt-' + rowIndex + '-perf');
       if (impEl) impEl.value = imp;
