@@ -551,10 +551,20 @@
       '\n督学师：' + data.teacher + '\n学习内容：' + data.content +
       '\n正确率：' + rowAcc + '%\n掌握比例：' + rowMas + masteryNote;
 
-    var prompt = '这是一家文化课培训机构的一对一/小班辅导场景（非学校课堂）。根据以下学生学习信息，请严格按格式生成两段内容：\n' +
+    // Add student history
+    var history = Storage.getStudentHistory(studentName);
+    if (history.length > 0) {
+      info += '\n\n该生历史反馈记录：';
+      for (var j = 0; j < Math.min(history.length, 5); j++) {
+        var h = history[j];
+        info += '\n- [' + h.date + '] 科目：' + h.subject + ' 内容：' + h.content + ' 正确率：' + h.accuracy + '% 掌握：' + h.mastery + ' 表现：' + (h.performance || '').substring(0, 40);
+      }
+    }
+
+    var prompt = '这是一家文化课培训机构的一对一/小班辅导场景（非学校课堂）。根据以下学生信息和历史记录，请严格按格式生成两段内容：\n' +
       '第一段用【建议提升】开头，直接指出1-2个知识薄弱点及针对性练习方向（30-40字即可，简洁扼要）。\n' +
       '第二段用【课堂表现】开头，从学习态度、专注程度、理解吸收情况、互动主动性四个维度客观评价（80-120字），既要肯定优点也要如实指出不足。\n' +
-      '用词注意：是培训机构辅导场景，不是学校上课，不用"同学""上课听讲""课堂纪律"等词汇。不提学生姓名和作业情况。\n\n' + info;
+      '请结合该生历史记录分析进步或退步趋势。用词注意：培训机构辅导场景，不用"同学""上课听讲"等学校词汇。不提姓名和作业。\n\n' + info;
 
     fetch('https://api.deepseek.com/v1/chat/completions', {
       method: 'POST',
