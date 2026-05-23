@@ -154,7 +154,7 @@
         }
         if (draft.studentInput) {
           var siEl = document.getElementById('fb-student-input');
-          if (siEl && !siEl.value) siEl.value = draft.studentInput;
+          if (siEl && !siEl.value) { siEl.value = draft.studentInput; showStudentHistory(draft.studentInput.trim()); }
         }
       }
     } catch (e) {}
@@ -354,6 +354,12 @@
     document.getElementById('fb-select-all').checked = false;
     updateSelectedCount();
 
+    // Hide history summary
+    var hs = document.getElementById('fb-history-summary');
+    if (hs) { hs.style.display = 'none'; hs._lastFeedback = null; }
+    var qf = document.getElementById('fb-quick-fill');
+    if (qf) qf.style.display = 'none';
+
     document.getElementById('preview-area').style.display = 'none';
     document.getElementById('batch-preview-list').innerHTML = '';
     document.getElementById('preview-area')._generatedTexts = {};
@@ -374,7 +380,7 @@
     if (btn) { btn.textContent = '...'; btn.classList.add('loading'); }
 
     var data = getFormData();
-    var studentName = document.getElementById('fb-student-input').value || '未指定';
+    var studentName = document.getElementById('fb-student-input').value.trim();
     var masteryNote = data.mastery ? '\n（掌握比例 ' + data.mastery + ' = 本节课涉及的知识点中，学生掌握的比例情况）' : '';
 
     var info = '日期：' + data.date + '\n时间：' + data.time +
