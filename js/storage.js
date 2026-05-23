@@ -76,12 +76,20 @@
   }
 
   function cleanOldHistory() {
-    var cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000; // 30 days ago
+    var settings = getSettings();
+    var retention = settings.historyRetention || 'never';
+    if (retention === 'never') return;
+    var days = retention === '3months' ? 90 : 30;
+    var cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
     var history = getHistory();
     var filtered = history.filter(function(h) { return h.createdAt >= cutoff; });
     if (filtered.length !== history.length) {
       saveHistory(filtered);
     }
+  }
+
+  function getStudentHistory(name) {
+    return getHistory().filter(function(h) { return h.studentName === name; });
   }
 
   function getFeedbackCount() {
@@ -92,11 +100,13 @@
     try {
       return JSON.parse(localStorage.getItem(KEYS.SETTINGS)) || {
         defaultSubject: '', defaultTeacher: '', defaultTime: '',
-        teacherPresets: [], timePresets: [], subjectPresets: []
+        teacherPresets: [], timePresets: [], subjectPresets: [],
+        historyRetention: 'never'
       };
     } catch (e) {
       return { defaultSubject: '', defaultTeacher: '', defaultTime: '',
-        teacherPresets: [], timePresets: [], subjectPresets: [] };
+        teacherPresets: [], timePresets: [], subjectPresets: [],
+        historyRetention: 'never' };
     }
   }
 
@@ -124,6 +134,7 @@
     saveSettings: saveSettings,
     repairStudents: repairStudents,
     cleanOldHistory: cleanOldHistory,
+    getStudentHistory: getStudentHistory,
     getFeedbackCount: getFeedbackCount,
     clearAll: clearAll
   };

@@ -9,8 +9,17 @@
     document.getElementById('set-teacher').value = settings.defaultTeacher || '';
     document.getElementById('set-time').value = settings.defaultTime || '';
     document.getElementById('set-apikey').value = settings.apiKey || '';
+    var retEl = document.getElementById('set-retention');
+    if (retEl) retEl.value = settings.historyRetention || 'never';
     renderPresets();
     updateStats();
+  }
+
+  function saveRetention() {
+    var settings = Storage.getSettings();
+    settings.historyRetention = document.getElementById('set-retention').value;
+    Storage.saveSettings(settings);
+    showToast('保留期设置已保存');
   }
 
   function updateStats() {
@@ -127,6 +136,7 @@
     save: save,
     addPreset: addPreset,
     removePreset: removePreset,
+    saveRetention: saveRetention,
     clearAll: clearAll
   };
 })();

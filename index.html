@@ -44,6 +44,8 @@
               <div class="student-filter-list" id="fb-student-list">
                 <div class="empty-hint" id="fb-student-empty">暂无学生，请先在「学生管理」中添加</div>
               </div>
+              <div id="fb-history-summary" class="history-summary" style="display:none"></div>
+              <button type="button" id="fb-quick-fill" class="btn btn-outline btn-sm" style="display:none;margin-top:8px" data-action="quick-fill">填充上次信息</button>
             </div>
             <div class="form-row">
               <div class="form-group half">
@@ -139,6 +141,11 @@
 
       <!-- Tab 3: 历史记录 -->
       <section id="tab-history" class="tab-page">
+        <div class="form-group">
+          <select id="history-filter-student">
+            <option value="">全部学生</option>
+          </select>
+        </div>
         <div id="history-empty" class="empty-hint card">暂无历史记录</div>
         <div id="history-list" class="history-list"></div>
       </section>
@@ -200,7 +207,19 @@
         <div class="card">
           <h2 class="card-title">使用统计</h2>
           <p>已生成反馈：<strong id="stat-count">0</strong> 条</p>
-          <p class="hint-text">历史记录自动保留最近 30 天</p>
+        </div>
+
+        <div class="card">
+          <h2 class="card-title">历史记录设置</h2>
+          <div class="form-group">
+            <label for="set-retention">自动清理</label>
+            <select id="set-retention">
+              <option value="never">不自动清理</option>
+              <option value="1month">保留最近 1 个月</option>
+              <option value="3months">保留最近 3 个月</option>
+            </select>
+          </div>
+          <button class="btn btn-primary btn-full" data-action="save-retention">保存</button>
         </div>
 
         <div class="card card-danger">

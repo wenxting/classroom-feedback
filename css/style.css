@@ -436,6 +436,36 @@ input[type="date"] {
   color: var(--text-hint);
 }
 
+/* Student History Summary */
+.history-summary {
+  margin-top: 8px;
+}
+
+.history-summary-item {
+  background: #f8fafc;
+  border-left: 3px solid var(--primary);
+  padding: 8px 12px;
+  margin-bottom: 6px;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.history-summary-item .hs-date {
+  color: var(--primary);
+  font-weight: 500;
+  margin-right: 6px;
+}
+
+.history-summary-item .hs-subject {
+  color: var(--text-secondary);
+  margin-right: 6px;
+}
+
+.history-summary-item .hs-text {
+  color: var(--text);
+}
+
 /* Batch Preview */
 #preview-area {
   animation: fadeIn 0.3s ease;
@@ -459,18 +489,19 @@ input[type="date"] {
 
 .preview-text {
   background: #f8f9fa;
-  border: none;
-  border-radius: 0;
-  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px;
   font-size: 14px;
   line-height: 1.8;
-  white-space: pre-wrap;
-  word-break: break-word;
   font-family: inherit;
   color: var(--text);
-  max-height: 300px;
-  overflow-y: auto;
-  margin: 0;
+  width: 100%;
+  min-height: 120px;
+  resize: vertical;
+  box-sizing: border-box;
+  margin: 8px;
+  max-width: calc(100% - 16px);
 }
 
 .preview-actions {

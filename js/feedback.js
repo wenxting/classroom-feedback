@@ -197,6 +197,7 @@
     if (studentInput) {
       studentInput.addEventListener('input', function() {
         filterStudentList(this.value);
+        showStudentHistory(this.value.trim());
       });
       studentInput.addEventListener('focus', function() {
         refreshStudentList();
@@ -276,7 +277,7 @@
 
       html += '<div class="batch-preview-item">' +
         '<div class="batch-preview-header">' + escapeHtml(studentName) + '</div>' +
-        '<pre class="preview-text">' + escapeHtml(text) + '</pre>' +
+        '<textarea class="preview-text" data-student="' + escapeHtml(studentName) + '">' + escapeHtml(text) + '</textarea>' +
         '<div class="preview-actions">' +
           '<button class="btn btn-primary" data-action="copy-single" data-student="' + escapeHtml(studentName) + '">复制</button>' +
           '<button class="btn btn-secondary" data-action="share-single" data-student="' + escapeHtml(studentName) + '">分享</button>' +
@@ -299,19 +300,16 @@
   }
 
   function copySingle(studentName) {
-    var previewArea = document.getElementById('preview-area');
-    var texts = previewArea._generatedTexts || {};
-    var text = texts[studentName];
+    var ta = document.querySelector('.preview-text[data-student="' + studentName + '"]');
+    var text = ta ? ta.value : '';
     if (!text) { showToast('反馈内容未找到'); return; }
     copyToClipboard(text);
   }
 
   function shareSingle(studentName) {
-    var previewArea = document.getElementById('preview-area');
-    var texts = previewArea._generatedTexts || {};
-    var text = texts[studentName];
+    var ta = document.querySelector('.preview-text[data-student="' + studentName + '"]');
+    var text = ta ? ta.value : '';
     if (!text) { showToast('反馈内容未找到'); return; }
-
     if (navigator.share) {
       navigator.share({ text: text }).catch(function() {});
     } else {
@@ -320,13 +318,14 @@
   }
 
   function copyAll() {
-    var previewArea = document.getElementById('preview-area');
-    var texts = previewArea._generatedTexts || {};
-    var allTexts = Object.values(texts);
-    if (allTexts.length === 0) { showToast('请先生成反馈'); return; }
-
-    var combined = allTexts.join('\n\n━━━━━━━━━━━━━━━━\n\n');
-    copyToClipboard(combined);
+    var textareas = document.querySelectorAll('.preview-text');
+    if (textareas.length === 0) { showToast('请先生成反馈'); return; }
+    var all = [];
+    for (var i = 0; i < textareas.length; i++) {
+      if (textareas[i].value) all.push(textareas[i].value);
+    }
+    if (all.length === 0) { showToast('请先生成反馈'); return; }
+    copyToClipboard(all.join('\n\n━━━━━━━━━━━━━━━━\n\n'));
   }
 
   function copyToClipboard(text) {
@@ -402,16 +401,30 @@
     if (btn) { btn.textContent = '...'; btn.classList.add('loading'); }
 
     var data = getFormData();
+    var studentName = document.getElementById('fb-student-input').value || '未指定';
+    var masteryNote = data.mastery ? '\n（掌握比例 ' + data.mastery + ' = 本节课涉及的知识点中，学生掌握的比例情况）' : '';
+
     var info = '日期：' + data.date + '\n时间：' + data.time +
-      '\n学生姓名：' + (document.getElementById('fb-student-input').value || '未指定') +
+      '\n学生姓名：' + studentName +
       '\n科目：' + data.subject + '\n督学师：' + data.teacher +
       '\n学习内容：' + data.content +
-      '\n正确率：' + data.accuracy + '%\n掌握比例：' + data.mastery;
+      '\n正确率：' + data.accuracy + '%' +
+      '\n掌握比例：' + data.mastery + masteryNote;
+
+    // Add student history
+    var history = Storage.getStudentHistory(studentName);
+    if (history.length > 0) {
+      info += '\n\n该生历史反馈记录：';
+      for (var i = 0; i < Math.min(history.length, 5); i++) {
+        var h = history[i];
+        info += '\n- [' + h.date + '] 科目：' + h.subject + ' 内容：' + h.content + ' 正确率：' + h.accuracy + '% 掌握：' + h.mastery + ' 表现：' + (h.performance || '').substring(0, 40);
+      }
+    }
 
     var isImprovement = targetId === 'fb-improvement';
     var prompt = isImprovement
-      ? '你是一位专业督学师。根据以下学生课堂信息，给出一段具体的建议提升内容（50-100字），指出知识薄弱点和具体练习方向，不需要标题，直接写内容。\n\n' + info
-      : '你是一位专业督学师。根据以下学生课堂信息，写一段课堂表现评价（80-150字），语气温暖鼓励，客观评价学生的优点和需要改进的地方，不需要标题，直接写内容。\n\n' + info;
+      ? '你是一位专业督学师。根据以下学生课堂信息和历史记录，给出一段具体的建议提升内容（50-100字），指出知识薄弱点和具体练习方向，可对比历史记录分析进步或退步。不需要标题，直接写内容。\n\n' + info
+      : '你是一位专业督学师。根据以下学生课堂信息和历史记录，写一段课堂表现评价（80-150字），语气温暖鼓励，可结合历史记录对比评价学生的进步情况。不需要标题，直接写内容。\n\n' + info;
 
     fetch('https://api.deepseek.com/v1/chat/completions', {
       method: 'POST',
@@ -446,6 +459,58 @@
     });
   }
 
+  function showStudentHistory(studentName) {
+    var container = document.getElementById('fb-history-summary');
+    var quickBtn = document.getElementById('fb-quick-fill');
+    if (!studentName || !container) {
+      if (container) container.style.display = 'none';
+      if (quickBtn) quickBtn.style.display = 'none';
+      return;
+    }
+
+    var history = Storage.getStudentHistory(studentName);
+    if (history.length === 0) {
+      container.style.display = 'none';
+      if (quickBtn) quickBtn.style.display = 'none';
+      return;
+    }
+
+    // Show quick fill button
+    if (quickBtn) quickBtn.style.display = '';
+
+    // Show last 3 summaries
+    var recent = history.slice(0, 3);
+    container.innerHTML = '<div style="font-size:13px;color:var(--text-secondary);margin-bottom:4px">历史记录</div>' +
+      recent.map(function(h) {
+        var perf = (h.performance || '').substring(0, 30);
+        return '<div class="history-summary-item">' +
+          '<span class="hs-date">' + escapeHtml(h.date) + '</span>' +
+          '<span class="hs-subject">' + escapeHtml(h.subject) + '</span>' +
+          '<span class="hs-text">' + escapeHtml(perf + (perf.length >= 30 ? '...' : '')) + '</span>' +
+        '</div>';
+      }).join('');
+    container.style.display = '';
+
+    // Store last feedback data for quick fill
+    container._lastFeedback = history[0];
+  }
+
+  function quickFill() {
+    var container = document.getElementById('fb-history-summary');
+    if (!container || !container._lastFeedback) return;
+    var last = container._lastFeedback;
+    if (!document.getElementById('fb-subject').value) {
+      document.getElementById('fb-subject').value = last.subject || '';
+    }
+    if (!document.getElementById('fb-teacher').value) {
+      document.getElementById('fb-teacher').value = last.teacher || '';
+    }
+    if (!document.getElementById('fb-time').value) {
+      document.getElementById('fb-time').value = last.time || '';
+    }
+    showToast('已填充科目、督学师、时间段');
+  }
+
   function escapeHtml(str) {
     var div = document.createElement('div');
     div.textContent = str;
@@ -466,6 +531,8 @@
     shareSingle: shareSingle,
     copyAll: copyAll,
     clearForm: clearForm,
-    aiExpand: aiExpand
+    aiExpand: aiExpand,
+    showStudentHistory: showStudentHistory,
+    quickFill: quickFill
   };
 })();

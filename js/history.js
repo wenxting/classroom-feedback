@@ -4,7 +4,23 @@
   var Storage = window.CF.Storage;
 
   function render() {
-    var history = Storage.getHistory();
+    var allHistory = Storage.getHistory();
+    var filterEl = document.getElementById('history-filter-student');
+    var filterName = filterEl ? filterEl.value : '';
+
+    // Populate filter dropdown
+    if (filterEl) {
+      var names = {};
+      allHistory.forEach(function(h) { names[h.studentName] = true; });
+      var currentValue = filterEl.value;
+      filterEl.innerHTML = '<option value="">全部学生</option>' +
+        Object.keys(names).map(function(n) {
+          return '<option value="' + n + '"' + (currentValue === n ? ' selected' : '') + '>' + n + '</option>';
+        }).join('');
+      filterEl.value = currentValue;
+    }
+
+    var history = filterName ? allHistory.filter(function(h) { return h.studentName === filterName; }) : allHistory;
     var container = document.getElementById('history-list');
     var emptyHint = document.getElementById('history-empty');
 

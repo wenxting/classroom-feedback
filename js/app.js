@@ -48,6 +48,12 @@
         case 'ai-expand':
           window.CF.Feedback.aiExpand(target.dataset.target);
           break;
+        case 'quick-fill':
+          window.CF.Feedback.quickFill();
+          break;
+        case 'save-retention':
+          window.CF.Settings.saveRetention();
+          break;
         case 'clear-form':
           window.CF.Feedback.clearForm();
           break;
@@ -80,6 +86,13 @@
           break;
       }
     });
+
+    var histFilter = document.getElementById('history-filter-student');
+    if (histFilter) {
+      histFilter.addEventListener('change', function() {
+        window.CF.History.render();
+      });
+    }
 
     document.getElementById('excel-file').addEventListener('change', function(e) {
       if (e.target.files.length > 0) {
