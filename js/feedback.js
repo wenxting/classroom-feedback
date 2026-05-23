@@ -237,6 +237,8 @@
         var b = document.getElementById('fb-mastery-b').value;
         return (a && b) ? a + '/' + b : (a || b || '');
       })(),
+      improvement: document.getElementById('fb-improvement').value,
+      performance: document.getElementById('fb-performance').value,
       homework: document.getElementById('fb-homework').value
     };
   }
@@ -394,8 +396,8 @@
 
     var isImprovement = targetId === 'fb-improvement';
     var prompt = isImprovement
-      ? '你是一位专业督学师。根据以下学生课堂信息和历史记录，给出一段具体的建议提升内容（50-100字），指出知识薄弱点和具体练习方向，可对比历史记录分析进步或退步。不需要标题，直接写内容。\n\n' + info
-      : '你是一位专业督学师。根据以下学生课堂信息和历史记录，写一段课堂表现评价（80-150字），语气温暖鼓励，可结合历史记录对比评价学生的进步情况。不需要标题，直接写内容。\n\n' + info;
+      ? '这是培训机构一对一/小班辅导场景。根据以下学生信息，直接指出1-2个知识薄弱点和针对性练习方向（30-40字）。不用"同学"等学校用词，不提姓名和作业。\n\n' + info
+      : '这是培训机构一对一/小班辅导场景。根据以下学生信息，从学习态度、专注程度、理解吸收、互动主动性四个维度评价（80-120字）。不用"同学""上课听讲""课堂纪律"等学校用词，不提姓名和作业。\n\n' + info;
 
     fetch('https://api.deepseek.com/v1/chat/completions', {
       method: 'POST',
@@ -406,7 +408,7 @@
       body: JSON.stringify({
         model: 'deepseek-chat',
         messages: [
-          { role: 'system', content: '你是一位经验丰富的专业督学师，善于分析学生情况并给出针对性的建议。回复简洁专业，不使用markdown格式，不要在回复中提及学生姓名。' },
+          { role: 'system', content: '你是培训机构专业督学师。注意这是培训机构小班辅导，不是学校大班授课。评价客观平衡，不提及姓名和作业。回复简洁，不用markdown。' },
           { role: 'user', content: prompt }
         ],
         max_tokens: 300,
@@ -488,12 +490,16 @@
     var table = document.getElementById('batch-table');
     if (!area || !table) return;
 
-    if (checked.length === 0) {
+    var singleFields = document.getElementById('fb-single-fields');
+    if (checked.length <= 1) {
       area.style.display = 'none';
+      if (singleFields) singleFields.style.display = '';
       return;
     }
 
+    // 2+ students: show batch table, hide single fields
     area.style.display = '';
+    if (singleFields) singleFields.style.display = 'none';
     var data = getFormData();
 
     // Build header + rows
@@ -545,10 +551,10 @@
       '\n督学师：' + data.teacher + '\n学习内容：' + data.content +
       '\n正确率：' + rowAcc + '%\n掌握比例：' + rowMas + masteryNote;
 
-    var prompt = '你是一位专业督学师。根据以下学生课堂信息，请严格按格式生成两段内容：\n' +
-      '第一段用【建议提升】开头，直接指出1-2个知识薄弱点及练习方向（30-40字即可，简洁扼要）。\n' +
-      '第二段用【课堂表现】开头，从听课状态、互动情况、纪律专注度、改进方向四个维度客观评价（80-120字），既要肯定优点也要如实指出不足。\n' +
-      '不要提及学生姓名，不要提及作业完成情况。\n\n' + info;
+    var prompt = '这是一家文化课培训机构的一对一/小班辅导场景（非学校课堂）。根据以下学生学习信息，请严格按格式生成两段内容：\n' +
+      '第一段用【建议提升】开头，直接指出1-2个知识薄弱点及针对性练习方向（30-40字即可，简洁扼要）。\n' +
+      '第二段用【课堂表现】开头，从学习态度、专注程度、理解吸收情况、互动主动性四个维度客观评价（80-120字），既要肯定优点也要如实指出不足。\n' +
+      '用词注意：是培训机构辅导场景，不是学校上课，不用"同学""上课听讲""课堂纪律"等词汇。不提学生姓名和作业情况。\n\n' + info;
 
     fetch('https://api.deepseek.com/v1/chat/completions', {
       method: 'POST',
@@ -556,7 +562,7 @@
       body: JSON.stringify({
         model: 'deepseek-chat',
         messages: [
-          { role: 'system', content: '你是一位经验丰富的专业督学师。评价客观平衡，从听课/互动/纪律/改进四维度分析。不提及学生姓名和作业情况。严格用【建议提升】和【课堂表现】作为标记。' },
+          { role: 'system', content: '你是培训机构专业督学师。评价客观平衡，从学习态度/专注度/理解吸收/互动主动性四维度分析。注意这是培训机构小班辅导，不是学校大班授课。不提及姓名和作业。严格用【建议提升】【课堂表现】作为标记。' },
           { role: 'user', content: prompt }
         ],
         max_tokens: 350, temperature: 0.7
@@ -636,7 +642,7 @@
     for (var i = 0; i < selectedStudents.length; i++) {
       var studentName = selectedStudents[i];
       // Get per-student data from table if available
-      var rowAcc = data.accuracy, rowMas = data.mastery, rowImp = '', rowPerf = '';
+      var rowAcc = data.accuracy, rowMas = data.mastery, rowImp = data.improvement, rowPerf = data.performance;
       if (checked.length > 0) {
         var accEl = document.getElementById('bt-' + i + '-acc');
         var masEl = document.getElementById('bt-' + i + '-mas');
