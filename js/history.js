@@ -15,7 +15,7 @@
       var currentValue = filterEl.value;
       filterEl.innerHTML = '<option value="">全部学生</option>' +
         Object.keys(names).map(function(n) {
-          return '<option value="' + n + '"' + (currentValue === n ? ' selected' : '') + '>' + n + '</option>';
+          return '<option value="' + escapeHtml(n) + '"' + (currentValue === n ? ' selected' : '') + '>' + escapeHtml(n) + '</option>';
         }).join('');
       filterEl.value = currentValue;
     }

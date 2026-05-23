@@ -39,6 +39,9 @@
     var emptyHint = document.getElementById('fb-student-empty');
     var selectAll = document.getElementById('fb-select-all');
 
+    // Read checked state BEFORE removing labels
+    var checkedNames = getCheckedStudentNames();
+
     // Remove only labels, keep empty hint in DOM
     var labels = container.querySelectorAll('label');
     for (var li = 0; li < labels.length; li++) {
@@ -50,13 +53,12 @@
       selectAll.checked = false;
       selectAll.disabled = true;
       updateSelectedCount();
+      renderBatchTable();
       return;
     }
 
     if (emptyHint) emptyHint.style.display = 'none';
     selectAll.disabled = false;
-
-    var checkedNames = getCheckedStudentNames();
     var allCheckedFlag = true;
 
     for (var i = 0; i < students.length; i++) {
@@ -336,7 +338,6 @@
     fields.forEach(function(f) {
       document.getElementById('fb-' + f).value = '';
     });
-    document.getElementById('fb-homework').value = '作业已完成，课后多练习巩固知识点';
     setTodayDate();
     var settings = Storage.getSettings();
     if (settings.defaultTime) {
@@ -599,13 +600,20 @@
     if (!settings.apiKey) { showToast('请先设置 API Key'); return; }
     var checked = document.querySelectorAll('.fb-student-check:checked');
     if (checked.length === 0) { showToast('请先勾选学生'); return; }
-    showToast('正在生成 ' + checked.length + ' 名学生的建议提升...');
+    showToast('正在生成 ' + checked.length + ' 名学生...');
     var i = 0;
+    var done = 0;
     function next() {
-      if (i >= checked.length) { showToast('全部生成完毕'); return; }
-      aiExpandRow(i);
+      if (i >= checked.length) {
+        showToast('全部完成（' + done + '/' + checked.length + '）');
+        return;
+      }
+      try {
+        aiExpandRow(i);
+        done++;
+      } catch(e) { console.error(e); }
       i++;
-      setTimeout(next, 1500);
+      setTimeout(next, 600);
     }
     next();
   }
