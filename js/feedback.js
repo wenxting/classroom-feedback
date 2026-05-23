@@ -124,18 +124,20 @@
   function refreshDatalists() {
     var settings = Storage.getSettings();
 
-    // Render preset tag buttons for subject, teacher, time
-    renderPresetRow('preset-row-subject', settings.subjectPresets || [], 'fb-subject');
-    renderPresetRow('preset-row-teacher', settings.teacherPresets || [], 'fb-teacher');
-    renderPresetRow('preset-row-time', settings.timePresets || [], 'fb-time');
-  }
+    var types = [
+      { id: 'subject-presets', list: settings.subjectPresets || [] },
+      { id: 'teacher-presets', list: settings.teacherPresets || [] },
+      { id: 'time-presets', list: settings.timePresets || [] }
+    ];
 
-  function renderPresetRow(rowId, list, inputId) {
-    var row = document.getElementById(rowId);
-    if (!row) return;
-    row.innerHTML = list.map(function(v) {
-      return '<button type="button" class="preset-btn" data-action="fill-preset" data-target="' + inputId + '" data-value="' + escapeHtml(v) + '">' + escapeHtml(v) + '</button>';
-    }).join('');
+    for (var i = 0; i < types.length; i++) {
+      var datalist = document.getElementById(types[i].id);
+      if (datalist) {
+        datalist.innerHTML = types[i].list.map(function(v) {
+          return '<option value="' + escapeHtml(v) + '">';
+        }).join('');
+      }
+    }
   }
 
   function setupAutoSave() {
@@ -502,11 +504,11 @@
     // Build header + rows
     var html = '<div class="batch-row header">' +
       '<div class="batch-cell name">学生</div>' +
-      '<div class="batch-cell" style="width:56px">正确率%</div>' +
+      '<div class="batch-cell" style="width:62px">正确率%</div>' +
       '<div class="batch-cell" style="width:66px">掌握</div>' +
-      '<div class="batch-cell" style="width:45%">建议提升</div>' +
-      '<div class="batch-cell" style="width:45%">课堂表现</div>' +
-      '<div class="batch-cell" style="width:32px">AI</div>' +
+      '<div class="batch-cell" style="width:30%">建议提升</div>' +
+      '<div class="batch-cell" style="width:30%">课堂表现</div>' +
+      '<div class="batch-cell" style="width:30px">AI</div>' +
       '</div>';
 
     for (var i = 0; i < checked.length; i++) {
