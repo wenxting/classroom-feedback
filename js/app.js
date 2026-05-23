@@ -45,6 +45,9 @@
           var targetEl = document.getElementById(target.dataset.target);
           if (targetEl) { targetEl.value = target.dataset.value; targetEl.focus(); }
           break;
+        case 'ai-expand':
+          window.CF.Feedback.aiExpand(target.dataset.target);
+          break;
         case 'clear-form':
           window.CF.Feedback.clearForm();
           break;

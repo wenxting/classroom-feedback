@@ -388,6 +388,64 @@
     localStorage.removeItem('cf_draft');
   }
 
+  function aiExpand(targetId) {
+    var settings = Storage.getSettings();
+    if (!settings.apiKey) {
+      showToast('请先在设置页填写 DeepSeek API Key');
+      return;
+    }
+
+    var targetEl = document.getElementById(targetId);
+    if (!targetEl) return;
+
+    var btn = document.querySelector('[data-target="' + targetId + '"]');
+    if (btn) { btn.textContent = '...'; btn.classList.add('loading'); }
+
+    var data = getFormData();
+    var info = '日期：' + data.date + '\n时间：' + data.time +
+      '\n学生姓名：' + (document.getElementById('fb-student-input').value || '未指定') +
+      '\n科目：' + data.subject + '\n督学师：' + data.teacher +
+      '\n学习内容：' + data.content +
+      '\n正确率：' + data.accuracy + '%\n掌握比例：' + data.mastery;
+
+    var isImprovement = targetId === 'fb-improvement';
+    var prompt = isImprovement
+      ? '你是一位专业督学师。根据以下学生课堂信息，给出一段具体的建议提升内容（50-100字），指出知识薄弱点和具体练习方向，不需要标题，直接写内容。\n\n' + info
+      : '你是一位专业督学师。根据以下学生课堂信息，写一段课堂表现评价（80-150字），语气温暖鼓励，客观评价学生的优点和需要改进的地方，不需要标题，直接写内容。\n\n' + info;
+
+    fetch('https://api.deepseek.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + settings.apiKey
+      },
+      body: JSON.stringify({
+        model: 'deepseek-chat',
+        messages: [
+          { role: 'system', content: '你是一位经验丰富的专业督学师，善于分析学生情况并给出针对性的建议。回复简洁专业，不使用markdown格式。' },
+          { role: 'user', content: prompt }
+        ],
+        max_tokens: 300,
+        temperature: 0.7
+      })
+    }).then(function(res) {
+      if (!res.ok) throw new Error('API 请求失败: ' + res.status);
+      return res.json();
+    }).then(function(json) {
+      var text = json.choices[0].message.content.trim();
+      if (targetEl.value) {
+        targetEl.value = targetEl.value + '\n' + text;
+      } else {
+        targetEl.value = text;
+      }
+    }).catch(function(err) {
+      showToast('AI 扩展失败，请检查 API Key 是否正确');
+      console.error(err);
+    }).finally(function() {
+      if (btn) { btn.textContent = 'AI'; btn.classList.remove('loading'); }
+    });
+  }
+
   function escapeHtml(str) {
     var div = document.createElement('div');
     div.textContent = str;
@@ -407,6 +465,7 @@
     copySingle: copySingle,
     shareSingle: shareSingle,
     copyAll: copyAll,
-    clearForm: clearForm
+    clearForm: clearForm,
+    aiExpand: aiExpand
   };
 })();

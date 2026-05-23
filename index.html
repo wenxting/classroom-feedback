@@ -73,11 +73,17 @@
             </div>
             <div class="form-group">
               <label for="fb-improvement">建议提升</label>
-              <input type="text" id="fb-improvement" placeholder="如：圆的综合证明题">
+              <div class="ai-input-row">
+                <input type="text" id="fb-improvement" placeholder="如：圆的综合证明题">
+                <button type="button" class="btn btn-ai btn-sm" data-action="ai-expand" data-target="fb-improvement">AI</button>
+              </div>
             </div>
             <div class="form-group">
               <label for="fb-performance">课堂表现</label>
-              <textarea id="fb-performance" rows="3" placeholder="描述学生的课堂表现..."></textarea>
+              <div class="ai-input-row">
+                <textarea id="fb-performance" rows="3" placeholder="描述学生的课堂表现..."></textarea>
+                <button type="button" class="btn btn-ai btn-sm" data-action="ai-expand" data-target="fb-performance">AI</button>
+              </div>
             </div>
             <div class="form-group">
               <label for="fb-homework">作业布置与完成情况</label>
@@ -152,6 +158,11 @@
           <div class="form-group">
             <label for="set-time">默认时间段</label>
             <input type="text" id="set-time" placeholder="如：15:00-17:00">
+          </div>
+          <div class="form-group">
+            <label for="set-apikey">DeepSeek API Key</label>
+            <input type="password" id="set-apikey" placeholder="sk-xxxxxxxxxxxxxxxx" autocomplete="off">
+            <p class="hint-text" style="margin-top:4px">注册获取：<a href="https://platform.deepseek.com" target="_blank">platform.deepseek.com</a>，用于 AI 智能扩展</p>
           </div>
           <button class="btn btn-primary btn-full" data-action="save-settings">保存设置</button>
         </div>

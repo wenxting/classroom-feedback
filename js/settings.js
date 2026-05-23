@@ -8,6 +8,7 @@
     document.getElementById('set-subject').value = settings.defaultSubject || '';
     document.getElementById('set-teacher').value = settings.defaultTeacher || '';
     document.getElementById('set-time').value = settings.defaultTime || '';
+    document.getElementById('set-apikey').value = settings.apiKey || '';
     renderPresets();
     updateStats();
   }
@@ -22,6 +23,7 @@
     settings.defaultSubject = document.getElementById('set-subject').value.trim();
     settings.defaultTeacher = document.getElementById('set-teacher').value.trim();
     settings.defaultTime = document.getElementById('set-time').value.trim();
+    settings.apiKey = document.getElementById('set-apikey').value.trim();
     Storage.saveSettings(settings);
     window.CF.Feedback.refreshDatalists();
     showToast('设置已保存');

@@ -197,6 +197,33 @@ input[type="date"] {
   color: #fff;
 }
 
+/* AI button */
+.btn-ai {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.btn-ai:active {
+  opacity: 0.8;
+}
+
+.btn-ai.loading {
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+.ai-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.ai-input-row input,
+.ai-input-row textarea {
+  flex: 1;
+}
+
 /* Buttons */
 .btn {
   display: inline-flex;
