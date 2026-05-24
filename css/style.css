@@ -190,33 +190,6 @@ input[type="date"] {
   font-family: inherit;
 }
 
-/* Preset tag buttons below inputs */
-.preset-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 6px;
-}
-
-.preset-btn {
-  display: inline-block;
-  padding: 3px 10px;
-  background: #e8f4fd;
-  color: var(--primary);
-  border: 1px solid var(--primary);
-  border-radius: 12px;
-  font-size: 12px;
-  cursor: pointer;
-  white-space: nowrap;
-  font-family: inherit;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.preset-btn:active {
-  background: var(--primary);
-  color: #fff;
-}
-
 /* AI button */
 .btn-ai {
   background: linear-gradient(135deg, #667eea, #764ba2);

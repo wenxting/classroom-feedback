@@ -252,24 +252,6 @@
     return dateStr;
   }
 
-  function buildFeedbackText(data, studentName) {
-    return '课堂反馈\n' +
-      '日期：' + formatDate(data.date) + '\n' +
-      '时间：' + data.time + '\n' +
-      '学生姓名：' + studentName + '\n' +
-      '科目：' + data.subject + '\n' +
-      '督学师：' + data.teacher + '\n' +
-      '学习内容：' + data.content + '\n' +
-      '\n' +
-      '正确率：' + data.accuracy + '%\n' +
-      '掌握比例：' + data.mastery + '\n' +
-      '建议提升：' + data.improvement + '\n' +
-      '\n' +
-      '课堂表现：' + data.performance + '\n' +
-      '\n' +
-      '作业布置与完成情况：' + data.homework;
-  }
-
   function copySingle(studentName) {
     var ta = document.querySelector('.preview-text[data-student="' + studentName + '"]');
     var text = ta ? ta.value : '';
@@ -458,11 +440,7 @@
       return res.json();
     }).then(function(json) {
       var text = json.choices[0].message.content.trim();
-      if (targetEl.value) {
-        targetEl.value = text;
-      } else {
-        targetEl.value = text;
-      }
+      targetEl.value = text;
     }).catch(function(err) {
       showToast('AI 扩展失败，请检查 API Key 是否正确');
       console.error(err);
@@ -673,16 +651,12 @@
     if (checked.length === 0) { showToast('请先勾选学生'); return; }
     showToast('正在生成 ' + checked.length + ' 名学生...');
     var i = 0;
-    var done = 0;
     function next() {
       if (i >= checked.length) {
-        showToast('全部完成（' + done + '/' + checked.length + '）');
+        showToast('全部已提交，请等待生成完成');
         return;
       }
-      try {
-        aiExpandRow(i);
-        done++;
-      } catch(e) { console.error(e); }
+      aiExpandRow(i);
       i++;
       setTimeout(next, 600);
     }
