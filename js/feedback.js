@@ -518,15 +518,18 @@
     }
 
     // 2+ students: show batch table, hide single fields
-    // Save current batch data before re-rendering
+    // Save current batch data keyed by student NAME (not index)
     var savedData = {};
-    for (var j = 0; j < checked.length; j++) {
+    var oldRows = document.querySelectorAll('.batch-row[data-student]');
+    for (var j = 0; j < oldRows.length; j++) {
+      var sname = oldRows[j].getAttribute('data-student');
+      var rowIdx = oldRows[j].querySelector('[data-action]') ? j : j;
       var oldAcc = document.getElementById('bt-' + j + '-acc');
       var oldMas = document.getElementById('bt-' + j + '-mas');
       var oldImp = document.getElementById('bt-' + j + '-imp');
       var oldPerf = document.getElementById('bt-' + j + '-perf');
-      if (oldAcc || oldMas || oldImp || oldPerf) {
-        savedData[j] = {
+      if ((oldAcc || oldMas || oldImp || oldPerf) && sname) {
+        savedData[sname] = {
           acc: oldAcc ? oldAcc.value : '',
           mas: oldMas ? oldMas.value : '',
           imp: oldImp ? oldImp.value : '',
@@ -552,7 +555,7 @@
     for (var i = 0; i < checked.length; i++) {
       var s = checked[i];
       var sid = 'bt-' + i;
-      var sd = savedData[i] || {};
+      var sd = savedData[s.value] || {};
       // Look up AI cache by student name
       var aiCache = window.CF.Feedback._aiResults || {};
       var aiData = aiCache[s.value] || {};
