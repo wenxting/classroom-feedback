@@ -426,10 +426,18 @@
     var styleInject = aiStyle ? '\n请按以下风格写作：' + aiStyle : '';
     var sampleInject = aiSamples ? '\n请模仿以下范文的语气和用词习惯：\n' + aiSamples : '';
 
+    var currentPerf = document.getElementById('fb-performance') ? document.getElementById('fb-performance').value : '';
+    var hasDiscipline = /纪律|态度|走神|分心|讲话|迟到|捣乱|不认真/.test(currentPerf);
+
     var isImprovement = targetId === 'fb-improvement';
     var prompt = isImprovement
       ? '这是培训机构一对一/小班辅导场景。根据以下学生信息，直接指出1-2个知识薄弱点和针对性练习方向（30-40字）。不用"同学"等学校用词，不提姓名和作业。\n\n' + info
-      : '这是培训机构一对一/小班辅导场景。根据以下学生信息，从学习态度、专注程度、理解吸收、互动主动性四个维度评价（80-120字）。不用"同学""上课听讲""课堂纪律"等学校用词，不提姓名和作业。\n\n' + info;
+      : '这是培训机构一对一/小班辅导场景。按固定结构输出：\n【学习状态】必出，一两句话概括学习状态趋势。\n' +
+        (hasDiscipline ? '【课堂纪律】必出，仅基于输入文本中提到的纪律问题描述。\n' : '') +
+        '【综合分析】必出，结合学习内容、正确率、掌握比例分析强弱项。\n【建议】必出，30-40字指出薄弱点和练习方向。\n【鼓励】必出，一句鼓励。\n' +
+        (hasDiscipline ? '' : '不要提及纪律相关内容。\n') +
+        '不提姓名和作业。培训机构场景。\n\n' + info +
+        (currentPerf ? '\n用户已填写内容：' + currentPerf : '');
     prompt += styleInject + sampleInject;
 
     fetch('https://api.deepseek.com/v1/chat/completions', {
@@ -453,7 +461,7 @@
     }).then(function(json) {
       var text = json.choices[0].message.content.trim();
       if (targetEl.value) {
-        targetEl.value = targetEl.value + '\n' + text;
+        targetEl.value = text;
       } else {
         targetEl.value = text;
       }
@@ -612,13 +620,22 @@
       }
     }
 
-    var prompt = '这是一家文化课培训机构的一对一/小班辅导场景（非学校课堂）。根据以下学生信息和历史记录，请严格按格式生成两段内容：\n' +
-      '第一段用【建议提升】开头，直接指出1-2个知识薄弱点及针对性练习方向（30-40字即可，简洁扼要）。\n' +
-      '第二段用【课堂表现】开头，从学习态度、专注程度、理解吸收情况、互动主动性四个维度客观评价（80-120字），既要肯定优点也要如实指出不足。\n' +
-      '请结合该生历史记录分析进步或退步趋势。用词注意：培训机构辅导场景，不用"同学""上课听讲"等学校词汇。不提姓名和作业。\n' +
-      (settings.aiStyle ? '写作风格：' + settings.aiStyle + '\n' : '') +
-      (settings.aiSamples ? '范文参考：\n' + settings.aiSamples + '\n' : '') +
-      '\n' + info;
+    // Get current input text for context (classroom performance field)
+    var currentPerf = document.getElementById('fb-performance') ? document.getElementById('fb-performance').value : '';
+    var hasDiscipline = /纪律|态度|走神|分心|讲话|迟到|捣乱|不认真/.test(currentPerf);
+
+    var prompt = '这是培训机构一对一/小班辅导场景。根据以下学生信息和历史记录，按固定结构输出：\n' +
+      '【学习状态】必出。结合历史记录，一两句话概括该生当前学习状态（如进步、稳定、退步趋势）。\n' +
+      (hasDiscipline ? '【课堂纪律】必出。根据"课堂表现"中提到的纪律问题客观描述，不额外猜测。\n' : '') +
+      '【综合分析】必出。结合学习内容、正确率、掌握比例，分析知识强弱项。\n' +
+      '【建议】必出。30-40字，指出1-2个薄弱点及练习方向。\n' +
+      '【鼓励】必出。一句温暖鼓励的话。\n' +
+      (hasDiscipline ? '' : '注意：不要提及纪律相关的内容。\n') +
+      '不提姓名和作业。培训机构场景，不用"同学""上课"等学校词汇。\n' +
+      (settings.aiStyle ? '风格：' + settings.aiStyle + '\n' : '') +
+      (settings.aiSamples ? '范文：\n' + settings.aiSamples + '\n' : '') +
+      '\n' + info +
+      (currentPerf ? '\n\n用户已填写的内容（可参考）：' + currentPerf : '');
 
     fetch('https://api.deepseek.com/v1/chat/completions', {
       method: 'POST',
@@ -626,31 +643,46 @@
       body: JSON.stringify({
         model: 'deepseek-chat',
         messages: [
-          { role: 'system', content: '你是培训机构专业督学师。评价客观平衡，从学习态度/专注度/理解吸收/互动主动性四维度分析。注意这是培训机构小班辅导，不是学校大班授课。不提及姓名和作业。严格用【建议提升】【课堂表现】作为标记。' },
+          { role: 'system', content: '你是培训机构专业督学师。按【学习状态】【课堂纪律】【综合分析】【建议】【鼓励】格式输出。客观评价，不猜测未提及的问题。不提姓名和作业。' },
           { role: 'user', content: prompt }
         ],
-        max_tokens: 350, temperature: 0.7
+        max_tokens: 400, temperature: 0.7
       })
     }).then(function(res) {
       if (!res.ok) throw new Error('API error ' + res.status);
       return res.json();
     }).then(function(json) {
       var text = json.choices[0].message.content.trim();
-      var imp = '', perf = '';
-      var impIdx = text.indexOf('【课堂表现】');
-      if (impIdx > -1) {
-        imp = text.substring(0, impIdx).replace('【建议提升】', '').trim();
-        perf = text.substring(impIdx).replace('【课堂表现】', '').trim();
-      } else {
-        // Fallback: try splitting by double newline
-        var parts = text.split('\n\n');
-        imp = parts[0] ? parts[0].replace('【建议提升】', '').trim() : '';
-        perf = parts.slice(1).join('\n\n').replace('【课堂表现】', '').trim();
+      // Parse sections
+      var sections = { imp: '', perf: '' };
+      var markers = ['【学习状态】','【课堂纪律】','【综合分析】','【建议】','【鼓励】'];
+      var startIdx = -1;
+      for (var m = 0; m < markers.length; m++) {
+        var idx = text.indexOf(markers[m]);
+        if (idx >= 0) {
+          if (startIdx >= 0) {
+            sections.imp += text.substring(startIdx, idx).trim() + '\n\n';
+          }
+          startIdx = idx;
+        }
       }
+      if (startIdx >= 0) {
+        sections.imp += text.substring(startIdx).trim();
+      } else {
+        sections.imp = text; // fallback
+      }
+      sections.perf = sections.imp;
+
+      // Write to DOM and cache
       var impEl = document.getElementById('bt-' + rowIndex + '-imp');
       var perfEl = document.getElementById('bt-' + rowIndex + '-perf');
-      if (impEl) impEl.value = imp;
-      if (perfEl) perfEl.value = perf;
+      if (impEl) impEl.value = sections.imp;
+      if (perfEl) perfEl.value = sections.perf;
+
+      // Store in memory cache for generateFeedback
+      if (!window.CF.Feedback._aiResults) window.CF.Feedback._aiResults = {};
+      window.CF.Feedback._aiResults['bt-' + rowIndex + '-imp'] = sections.imp;
+      window.CF.Feedback._aiResults['bt-' + rowIndex + '-perf'] = sections.perf;
     }).catch(function(err) {
       showToast('AI 失败，请检查 API Key');
       console.error(err);
@@ -714,8 +746,14 @@
         var perfEl = document.getElementById('bt-' + i + '-perf');
         if (accEl && accEl.value) rowAcc = accEl.value;
         if (masEl && masEl.value) rowMas = masEl.value;
-        if (impEl && impEl.value) rowImp = impEl.value;
-        if (perfEl && perfEl.value) rowPerf = perfEl.value;
+        // Prefer AI memory cache over DOM value
+        var cacheKeyImp = 'bt-' + i + '-imp';
+        var cacheKeyPerf = 'bt-' + i + '-perf';
+        var aiCache = window.CF.Feedback._aiResults || {};
+        if (aiCache[cacheKeyImp]) { rowImp = aiCache[cacheKeyImp]; }
+        else if (impEl && impEl.value) rowImp = impEl.value;
+        if (aiCache[cacheKeyPerf]) { rowPerf = aiCache[cacheKeyPerf]; }
+        else if (perfEl && perfEl.value) rowPerf = perfEl.value;
       }
 
       var text = '课堂反馈\n日期：' + formatDate(data.date) + '\n时间：' + data.time +
