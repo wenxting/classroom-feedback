@@ -357,6 +357,9 @@
     document.getElementById('fb-select-all').checked = false;
     updateSelectedCount();
 
+    // Clear AI results cache
+    window.CF.Feedback._aiResults = {};
+
     // Hide history summary
     var hs = document.getElementById('fb-history-summary');
     if (hs) { hs.style.display = 'none'; hs._lastFeedback = null; }
@@ -550,12 +553,15 @@
       var s = checked[i];
       var sid = 'bt-' + i;
       var sd = savedData[i] || {};
+      // Look up AI cache by student name
+      var aiCache = window.CF.Feedback._aiResults || {};
+      var aiData = aiCache[s.value] || {};
       html += '<div class="batch-row" data-student="' + escapeHtml(s.value) + '">' +
         '<div class="batch-cell name">' + escapeHtml(s.value) + '</div>' +
         '<div class="batch-cell"><input type="text" id="' + sid + '-acc" value="' + escapeHtml(sd.acc || data.accuracy) + '" placeholder="' + escapeHtml(data.accuracy || '80') + '"></div>' +
         '<div class="batch-cell"><input type="text" id="' + sid + '-mas" value="' + escapeHtml(sd.mas || data.mastery) + '" placeholder="' + escapeHtml(data.mastery || '7/8') + '"></div>' +
-        '<div class="batch-cell"><input type="text" id="' + sid + '-imp" value="' + escapeHtml(sd.imp || '') + '" placeholder="可选"></div>' +
-        '<div class="batch-cell"><input type="text" id="' + sid + '-perf" value="' + escapeHtml(sd.perf || '') + '" placeholder="可选"></div>' +
+        '<div class="batch-cell"><input type="text" id="' + sid + '-imp" value="' + escapeHtml(aiData.imp || sd.imp || '') + '" placeholder="可选"></div>' +
+        '<div class="batch-cell"><input type="text" id="' + sid + '-perf" value="' + escapeHtml(aiData.perf || sd.perf || '') + '" placeholder="可选"></div>' +
         '<div class="batch-cell"><button type="button" class="btn btn-ai btn-sm" data-action="ai-expand-row" data-row="' + i + '">AI</button></div>' +
         '</div>';
     }
@@ -600,9 +606,10 @@
     var currentPerf = document.getElementById('fb-performance') ? document.getElementById('fb-performance').value : '';
     var hasDiscipline = /纪律|态度|走神|分心|讲话|迟到|捣乱|不认真/.test(currentPerf);
 
-    var prompt = '这是培训机构一对一/小班辅导场景。根据以下学生信息和历史记录，写一段完整流畅的评价（80-150字），不分段、不加任何小标题。\n' +
-      '内容按顺序涵盖：学习状态概括→结合正确率和掌握比例的综合分析→具体建议→一句鼓励。' +
-      (hasDiscipline ? '\n用户提到的纪律问题可简要提及，但不过度展开。' : '\n不要提及纪律相关的内容。') +
+    var prompt = '这是培训机构一对一/小班辅导场景。根据以下学生信息和历史记录，生成两段内容，严格用【建议提升】和【课堂表现】标记分隔：\n' +
+      '【建议提升】：30-40字，直接指出1-2个知识薄弱点和针对性练习方向。\n' +
+      '【课堂表现】：80-150字，完整流畅的一段评价，按学习状态→综合分析→鼓励的顺序写。' +
+      (hasDiscipline ? '纪律问题可简要提及。' : '不要提及纪律。') +
       '\n不提姓名和作业。不用"同学""上课"等学校词汇。' +
       (settings.aiStyle ? '\n风格：' + settings.aiStyle : '') +
       (settings.aiSamples ? '\n范文参考：\n' + settings.aiSamples : '') +
@@ -615,27 +622,34 @@
       body: JSON.stringify({
         model: 'deepseek-chat',
         messages: [
-          { role: 'system', content: '你是培训机构专业督学师。写一段完整流畅的评价，不分段无标题。客观评价，不猜测未提及的问题。不提姓名和作业。' },
+          { role: 'system', content: '你是培训机构专业督学师。严格用【建议提升】【课堂表现】两段标记输出。评价客观。不提姓名和作业。' },
           { role: 'user', content: prompt }
         ],
-        max_tokens: 300, temperature: 0.7
+        max_tokens: 400, temperature: 0.7
       })
     }).then(function(res) {
       if (!res.ok) throw new Error('API error ' + res.status);
       return res.json();
     }).then(function(json) {
       var text = json.choices[0].message.content.trim();
+      var imp = '', perf = '';
+      var perfIdx = text.indexOf('【课堂表现】');
+      if (perfIdx > -1) {
+        imp = text.substring(0, perfIdx).replace('【建议提升】', '').trim();
+        perf = text.substring(perfIdx).replace('【课堂表现】', '').trim();
+      } else {
+        imp = perf = text;
+      }
 
-      // Write to DOM and cache
+      // Write to DOM
       var impEl = document.getElementById('bt-' + rowIndex + '-imp');
       var perfEl = document.getElementById('bt-' + rowIndex + '-perf');
-      if (impEl) impEl.value = text;
-      if (perfEl) perfEl.value = text;
+      if (impEl) impEl.value = imp;
+      if (perfEl) perfEl.value = perf;
 
-      // Store in memory cache for generateFeedback
+      // Cache by student NAME (not index) to survive re-selection
       if (!window.CF.Feedback._aiResults) window.CF.Feedback._aiResults = {};
-      window.CF.Feedback._aiResults['bt-' + rowIndex + '-imp'] = text;
-      window.CF.Feedback._aiResults['bt-' + rowIndex + '-perf'] = text;
+      window.CF.Feedback._aiResults[studentName] = { imp: imp, perf: perf };
     }).catch(function(err) {
       showToast('AI 失败，请检查 API Key');
       console.error(err);
@@ -695,13 +709,12 @@
         var perfEl = document.getElementById('bt-' + i + '-perf');
         if (accEl && accEl.value) rowAcc = accEl.value;
         if (masEl && masEl.value) rowMas = masEl.value;
-        // Prefer AI memory cache over DOM value
-        var cacheKeyImp = 'bt-' + i + '-imp';
-        var cacheKeyPerf = 'bt-' + i + '-perf';
+        // Prefer AI memory cache (by student name) over DOM value
         var aiCache = window.CF.Feedback._aiResults || {};
-        if (aiCache[cacheKeyImp]) { rowImp = aiCache[cacheKeyImp]; }
+        var aiData = aiCache[studentName] || {};
+        if (aiData.imp) { rowImp = aiData.imp; }
         else if (impEl && impEl.value) rowImp = impEl.value;
-        if (aiCache[cacheKeyPerf]) { rowPerf = aiCache[cacheKeyPerf]; }
+        if (aiData.perf) { rowPerf = aiData.perf; }
         else if (perfEl && perfEl.value) rowPerf = perfEl.value;
       }
 
