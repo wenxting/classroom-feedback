@@ -13,6 +13,7 @@ desktop.ini
 android/
 www/
 node_modules/
+electron/
 capacitor.config.json
 package.json
 package-lock.json
