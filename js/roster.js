@@ -21,7 +21,7 @@
         '<input type="checkbox" class="batch-check" value="' + s.id + '" style="display:' + (batchMode ? 'block' : 'none') + '">' +
         '<div class="student-info">' +
           '<span class="student-name">' + escapeHtml(s.name) + '</span>' +
-          '<span class="student-class">' + escapeHtml(s.className) + '</span>' +
+          '<span class="student-grade">' + escapeHtml(s.grade) + '</span>' +
         '</div>' +
         '<button class="btn-delete" data-action="delete-student" data-id="' + s.id + '" style="display:' + (batchMode ? 'none' : '') + '">删除</button>' +
       '</div>';
@@ -32,12 +32,12 @@
     var nameInput = document.getElementById('roster-name');
     var classInput = document.getElementById('roster-class');
     var name = nameInput.value.trim();
-    var className = classInput.value.trim();
+    var grade = classInput.value.trim();
 
     if (!name) { showToast('请输入学生姓名'); return; }
-    if (!className) { showToast('请输入班级'); return; }
+    if (!grade) { showToast('请输入年级'); return; }
 
-    Storage.addStudent(name, className);
+    Storage.addStudent(name, grade);
     nameInput.value = '';
     classInput.value = '';
     render();
@@ -79,15 +79,15 @@
         var row = rows[i];
         if (!row) continue;
         var name = String(row[0] || '').trim();
-        var className = String(row[1] || '').trim();
-        if (name && className) {
-          Storage.addStudent(name, className);
+        var grade = String(row[1] || '').trim();
+        if (name && grade) {
+          Storage.addStudent(name, grade);
           count++;
         }
       }
 
       if (count === 0) {
-        showToast('未找到有效数据，请确保第一列为姓名、第二列为班级');
+        showToast('未找到有效数据，请确保第一列为姓名、第二列为年级');
         return;
       }
 

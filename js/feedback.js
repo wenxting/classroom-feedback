@@ -66,7 +66,7 @@
       var ns = document.createElement('span');
       ns.className = 'check-name'; ns.textContent = s.name;
       var cs = document.createElement('span');
-      cs.className = 'check-class'; cs.textContent = s.className;
+      cs.className = 'check-grade'; cs.textContent = s.grade;
       label.appendChild(cb); label.appendChild(ns); label.appendChild(cs);
       container.appendChild(label);
     }

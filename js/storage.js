@@ -34,6 +34,12 @@
         changed = true;
       }
       seen[s.id] = true;
+      // Migrate old className field to grade
+      if (s.className !== undefined && s.grade === undefined) {
+        s.grade = s.className;
+        delete s.className;
+        changed = true;
+      }
     });
     if (changed) saveStudents(students);
   }
@@ -42,9 +48,9 @@
     localStorage.setItem(KEYS.STUDENTS, JSON.stringify(students));
   }
 
-  function addStudent(name, className) {
+  function addStudent(name, grade) {
     var students = getStudents();
-    var student = { id: nextId(), name: name.trim(), className: className.trim() };
+    var student = { id: nextId(), name: name.trim(), grade: grade.trim() };
     students.push(student);
     saveStudents(students);
     return student;
