@@ -103,15 +103,13 @@
   function shareHistory(id) {
     var record = Storage.getHistory().find(function(h) { return h.id === id; });
     if (!record) return;
-
     var text = buildFeedbackText(record);
-    if (navigator.share) {
-      navigator.share({ title: '课堂反馈 - ' + record.studentName, text: text }).catch(function() {
-        copyHistory(id);
-      });
+    // Use shared share function from Feedback module
+    if (window.CF.Feedback && window.CF.Feedback.doShare) {
+      window.CF.Feedback.doShare(text);
     } else {
       copyHistory(id);
-      showToast('已复制，可粘贴到微信发送');
+      showToast('已复制，可到微信粘贴发送');
     }
   }
 
@@ -179,7 +177,11 @@
         }
         render();
         if (window.CF.Settings && window.CF.Settings.init) window.CF.Settings.init();
-        showToast('成功导入 ' + count + ' 条记录');
+        if (count === 0) {
+          showToast('未找到有效记录，请检查文件格式');
+        } else {
+          showToast('成功导入 ' + count + ' 条记录');
+        }
       } catch(err) {
         showToast('导入失败，请检查文件格式');
         console.error(err);

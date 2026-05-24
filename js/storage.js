@@ -99,14 +99,14 @@
   function getSettings() {
     try {
       return JSON.parse(localStorage.getItem(KEYS.SETTINGS)) || {
-        defaultSubject: '', defaultTeacher: '', defaultTime: '',
+        defaultSubject: '', defaultTeacher: '', defaultTime: '', defaultHomework: '',
         teacherPresets: [], timePresets: [], subjectPresets: [],
-        historyRetention: 'never'
+        historyRetention: 'never', apiKey: '', aiStyle: '', aiSamples: ''
       };
     } catch (e) {
-      return { defaultSubject: '', defaultTeacher: '', defaultTime: '',
+      return { defaultSubject: '', defaultTeacher: '', defaultTime: '', defaultHomework: '',
         teacherPresets: [], timePresets: [], subjectPresets: [],
-        historyRetention: 'never' };
+        historyRetention: 'never', apiKey: '', aiStyle: '', aiSamples: '' };
     }
   }
 

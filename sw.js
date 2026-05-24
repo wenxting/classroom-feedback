@@ -1,22 +1,14 @@
-var CACHE_NAME = 'cf-v1';
-var urlsToCache = [
-  './',
-  'index.html',
-  'css/style.css',
-  'js/storage.js',
-  'js/roster.js',
-  'js/feedback.js',
-  'js/history.js',
-  'js/settings.js',
-  'js/app.js',
-  'manifest.json',
-  'icon.svg'
-];
+var CACHE_NAME = 'cf-v2';
 
 self.addEventListener('install', function(event) {
   event.waitUntil(
     caches.open(CACHE_NAME).then(function(cache) {
-      return cache.addAll(urlsToCache);
+      return cache.addAll([
+        './', 'index.html', 'css/style.css',
+        'js/storage.js', 'js/roster.js', 'js/feedback.js',
+        'js/history.js', 'js/settings.js', 'js/app.js', 'js/xlsx.full.min.js',
+        'manifest.json', 'icon.svg'
+      ]);
     })
   );
 });
@@ -38,4 +30,12 @@ self.addEventListener('activate', function(event) {
       );
     })
   );
+});
+
+self.addEventListener('message', function(event) {
+  if (event.data && event.data.type === 'CLEAR_CACHE') {
+    caches.keys().then(function(names) {
+      return Promise.all(names.map(function(n) { return caches.delete(n); }));
+    });
+  }
 });

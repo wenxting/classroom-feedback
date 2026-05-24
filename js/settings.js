@@ -22,6 +22,9 @@
     var settings = Storage.getSettings();
     settings.historyRetention = document.getElementById('set-retention').value;
     Storage.saveSettings(settings);
+    Storage.cleanOldHistory();
+    if (window.CF.History && window.CF.History.render) window.CF.History.render();
+    updateStats();
     showToast('保留期设置已保存');
   }
 

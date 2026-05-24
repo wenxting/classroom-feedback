@@ -2,6 +2,24 @@
   'use strict';
 
   function init() {
+    // Version-based cache busting for APK updates
+    var APP_VERSION = '2.0.3';
+    var storedVersion = '';
+    try { storedVersion = localStorage.getItem('cf_app_version') || ''; } catch(e) {}
+    if (storedVersion !== APP_VERSION) {
+      localStorage.setItem('cf_app_version', APP_VERSION);
+      // Clear any stale service worker caches
+      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_CACHE' });
+      }
+      // Unregister old service workers
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(regs) {
+          for (var i = 0; i < regs.length; i++) regs[i].unregister();
+        });
+      }
+    }
+
     window.CF.Storage.repairStudents();
     window.CF.Storage.cleanOldHistory();
     window.CF.Feedback.init();
@@ -40,10 +58,6 @@
           break;
         case 'copy-all':
           window.CF.Feedback.copyAll();
-          break;
-        case 'fill-preset':
-          var targetEl = document.getElementById(target.dataset.target);
-          if (targetEl) { targetEl.value = target.dataset.value; targetEl.focus(); }
           break;
         case 'ai-expand':
           window.CF.Feedback.aiExpand(target.dataset.target);

@@ -281,14 +281,32 @@
     var ta = document.querySelector('.preview-text[data-student="' + studentName + '"]');
     var text = ta ? ta.value : '';
     if (!text) { showToast('反馈内容未找到'); return; }
+    doShare(text);
+  }
+
+  function doShare(text) {
+    // Try native Capacitor Share plugin first
+    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Share) {
+      try {
+        window.Capacitor.Plugins.Share.share({ text: text }).catch(function() {
+          fallbackCopyShare(text);
+        });
+        return;
+      } catch(e) {}
+    }
+    // Try Web Share API
     if (navigator.share) {
-      navigator.share({ title: '课堂反馈 - ' + studentName, text: text }).catch(function() {
-        copyToClipboard(text);
+      navigator.share({ text: text }).catch(function() {
+        fallbackCopyShare(text);
       });
     } else {
-      copyToClipboard(text);
-      showToast('已复制，可粘贴到微信发送');
+      fallbackCopyShare(text);
     }
+  }
+
+  function fallbackCopyShare(text) {
+    copyToClipboard(text);
+    showToast('已复制，可到微信粘贴发送');
   }
 
   function copyAll() {
@@ -331,7 +349,7 @@
   }
 
   function clearForm() {
-    var fields = ['student-input', 'subject', 'teacher', 'content', 'accuracy'];
+    var fields = ['student-input', 'subject', 'teacher', 'content', 'accuracy', 'improvement', 'performance'];
     document.getElementById('fb-mastery-a').value = '';
     document.getElementById('fb-mastery-b').value = '';
     fields.forEach(function(f) {
@@ -384,7 +402,7 @@
 
     var data = getFormData();
     var studentName = document.getElementById('fb-student-input').value.trim();
-    var masteryNote = data.mastery ? '\n（掌握比例 ' + data.mastery + ' = 本节课涉及的知识点中，学生掌握的比例情况）' : '';
+    var masteryNote = data.mastery ? '\n【重要】掌握比例 ' + data.mastery + ' 的含义：本节课共涉及 ' + (data.mastery.split('/')[1] || '?') + ' 个知识点，学生仅掌握了其中 ' + (data.mastery.split('/')[0] || '?') + ' 个。请据此评估知识薄弱点。' : '';
 
     var info = '日期：' + data.date + '\n时间：' + data.time +
       '\n学生姓名：' + studentName +
@@ -513,6 +531,23 @@
     }
 
     // 2+ students: show batch table, hide single fields
+    // Save current batch data before re-rendering
+    var savedData = {};
+    for (var j = 0; j < checked.length; j++) {
+      var oldAcc = document.getElementById('bt-' + j + '-acc');
+      var oldMas = document.getElementById('bt-' + j + '-mas');
+      var oldImp = document.getElementById('bt-' + j + '-imp');
+      var oldPerf = document.getElementById('bt-' + j + '-perf');
+      if (oldAcc || oldMas || oldImp || oldPerf) {
+        savedData[j] = {
+          acc: oldAcc ? oldAcc.value : '',
+          mas: oldMas ? oldMas.value : '',
+          imp: oldImp ? oldImp.value : '',
+          perf: oldPerf ? oldPerf.value : ''
+        };
+      }
+    }
+
     area.style.display = '';
     if (singleFields) singleFields.style.display = 'none';
     var data = getFormData();
@@ -530,12 +565,13 @@
     for (var i = 0; i < checked.length; i++) {
       var s = checked[i];
       var sid = 'bt-' + i;
+      var sd = savedData[i] || {};
       html += '<div class="batch-row" data-student="' + escapeHtml(s.value) + '">' +
         '<div class="batch-cell name">' + escapeHtml(s.value) + '</div>' +
-        '<div class="batch-cell"><input type="text" id="' + sid + '-acc" value="' + escapeHtml(data.accuracy) + '" placeholder="' + escapeHtml(data.accuracy || '80') + '"></div>' +
-        '<div class="batch-cell"><input type="text" id="' + sid + '-mas" value="' + escapeHtml(data.mastery) + '" placeholder="' + escapeHtml(data.mastery || '7/8') + '"></div>' +
-        '<div class="batch-cell"><input type="text" id="' + sid + '-imp" value="" placeholder="可选"></div>' +
-        '<div class="batch-cell"><input type="text" id="' + sid + '-perf" value="" placeholder="可选"></div>' +
+        '<div class="batch-cell"><input type="text" id="' + sid + '-acc" value="' + escapeHtml(sd.acc || data.accuracy) + '" placeholder="' + escapeHtml(data.accuracy || '80') + '"></div>' +
+        '<div class="batch-cell"><input type="text" id="' + sid + '-mas" value="' + escapeHtml(sd.mas || data.mastery) + '" placeholder="' + escapeHtml(data.mastery || '7/8') + '"></div>' +
+        '<div class="batch-cell"><input type="text" id="' + sid + '-imp" value="' + escapeHtml(sd.imp || '') + '" placeholder="可选"></div>' +
+        '<div class="batch-cell"><input type="text" id="' + sid + '-perf" value="' + escapeHtml(sd.perf || '') + '" placeholder="可选"></div>' +
         '<div class="batch-cell"><button type="button" class="btn btn-ai btn-sm" data-action="ai-expand-row" data-row="' + i + '">AI</button></div>' +
         '</div>';
     }
@@ -559,7 +595,7 @@
     var masEl = document.getElementById('bt-' + rowIndex + '-mas');
     var rowAcc = accEl && accEl.value ? accEl.value : data.accuracy;
     var rowMas = masEl && masEl.value ? masEl.value : data.mastery;
-    var masteryNote = rowMas ? '\n（掌握比例 ' + rowMas + ' = 本节课涉及的知识点中，学生掌握的比例情况）' : '';
+    var masteryNote = rowMas ? '\n【重要】掌握比例 ' + rowMas + ' 的含义：本节课共涉及 ' + (rowMas.split('/')[1] || '?') + ' 个知识点，学生仅掌握了其中 ' + (rowMas.split('/')[0] || '?') + ' 个。请据此评估知识薄弱点。' : '';
 
     var info = '日期：' + data.date + '\n时间：' + data.time +
       '\n学生姓名：' + studentName + '\n科目：' + data.subject +
@@ -737,6 +773,7 @@
     aiExpandAll: aiExpandAll,
     renderBatchTable: renderBatchTable,
     reloadDefaults: reloadDefaults,
+    doShare: doShare,
     showStudentHistory: showStudentHistory,
     quickFill: quickFill
   };
