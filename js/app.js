@@ -105,7 +105,7 @@
 
     var histFilter = document.getElementById('history-filter-student');
     if (histFilter) {
-      histFilter.addEventListener('change', function() {
+      histFilter.addEventListener('input', function() {
         window.CF.History.render();
       });
     }

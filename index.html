@@ -162,9 +162,7 @@
       <!-- Tab 3: 历史记录 -->
       <section id="tab-history" class="tab-page">
         <div style="display:flex;gap:8px;margin-bottom:8px">
-          <select id="history-filter-student" style="flex:1">
-            <option value="">全部学生</option>
-          </select>
+          <input type="text" id="history-filter-student" placeholder="输入学生姓名查找..." style="flex:1">
           <button class="btn btn-outline btn-sm" data-action="export-history">导出</button>
           <label class="btn btn-outline btn-sm file-label" style="margin:0">
             <input type="file" id="history-import-file" accept=".xlsx,.xls" hidden>

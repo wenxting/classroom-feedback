@@ -6,21 +6,11 @@
   function render() {
     var allHistory = Storage.getHistory();
     var filterEl = document.getElementById('history-filter-student');
-    var filterName = filterEl ? filterEl.value : '';
+    var filterName = filterEl ? filterEl.value.trim() : '';
 
-    // Populate filter dropdown
-    if (filterEl) {
-      var names = {};
-      allHistory.forEach(function(h) { names[h.studentName] = true; });
-      var currentValue = filterEl.value;
-      filterEl.innerHTML = '<option value="">全部学生</option>' +
-        Object.keys(names).map(function(n) {
-          return '<option value="' + escapeHtml(n) + '"' + (currentValue === n ? ' selected' : '') + '>' + escapeHtml(n) + '</option>';
-        }).join('');
-      filterEl.value = currentValue;
-    }
-
-    var history = filterName ? allHistory.filter(function(h) { return h.studentName === filterName; }) : allHistory;
+    var history = filterName
+      ? allHistory.filter(function(h) { return h.studentName.toLowerCase().indexOf(filterName.toLowerCase()) >= 0; })
+      : allHistory;
     var container = document.getElementById('history-list');
     var emptyHint = document.getElementById('history-empty');
 
