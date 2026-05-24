@@ -432,12 +432,10 @@
     var isImprovement = targetId === 'fb-improvement';
     var prompt = isImprovement
       ? '这是培训机构一对一/小班辅导场景。根据以下学生信息，直接指出1-2个知识薄弱点和针对性练习方向（30-40字）。不用"同学"等学校用词，不提姓名和作业。\n\n' + info
-      : '这是培训机构一对一/小班辅导场景。按固定结构输出：\n【学习状态】必出，一两句话概括学习状态趋势。\n' +
-        (hasDiscipline ? '【课堂纪律】必出，仅基于输入文本中提到的纪律问题描述。\n' : '') +
-        '【综合分析】必出，结合学习内容、正确率、掌握比例分析强弱项。\n【建议】必出，30-40字指出薄弱点和练习方向。\n【鼓励】必出，一句鼓励。\n' +
-        (hasDiscipline ? '' : '不要提及纪律相关内容。\n') +
-        '不提姓名和作业。培训机构场景。\n\n' + info +
-        (currentPerf ? '\n用户已填写内容：' + currentPerf : '');
+      : '这是培训机构一对一/小班辅导场景。写一段完整流畅的评价（80-150字），不分段无标题。按顺序涵盖：学习状态概括→结合正确率和掌握比例的分析→具体建议→一句鼓励。' +
+        (hasDiscipline ? '纪律问题可简要提及，不过度展开。' : '不要提及纪律内容。') +
+        '不提姓名和作业。\n\n' + info +
+        (currentPerf ? '\n用户已填内容：' + currentPerf : '');
     prompt += styleInject + sampleInject;
 
     fetch('https://api.deepseek.com/v1/chat/completions', {
@@ -624,18 +622,14 @@
     var currentPerf = document.getElementById('fb-performance') ? document.getElementById('fb-performance').value : '';
     var hasDiscipline = /纪律|态度|走神|分心|讲话|迟到|捣乱|不认真/.test(currentPerf);
 
-    var prompt = '这是培训机构一对一/小班辅导场景。根据以下学生信息和历史记录，按固定结构输出：\n' +
-      '【学习状态】必出。结合历史记录，一两句话概括该生当前学习状态（如进步、稳定、退步趋势）。\n' +
-      (hasDiscipline ? '【课堂纪律】必出。根据"课堂表现"中提到的纪律问题客观描述，不额外猜测。\n' : '') +
-      '【综合分析】必出。结合学习内容、正确率、掌握比例，分析知识强弱项。\n' +
-      '【建议】必出。30-40字，指出1-2个薄弱点及练习方向。\n' +
-      '【鼓励】必出。一句温暖鼓励的话。\n' +
-      (hasDiscipline ? '' : '注意：不要提及纪律相关的内容。\n') +
-      '不提姓名和作业。培训机构场景，不用"同学""上课"等学校词汇。\n' +
-      (settings.aiStyle ? '风格：' + settings.aiStyle + '\n' : '') +
-      (settings.aiSamples ? '范文：\n' + settings.aiSamples + '\n' : '') +
-      '\n' + info +
-      (currentPerf ? '\n\n用户已填写的内容（可参考）：' + currentPerf : '');
+    var prompt = '这是培训机构一对一/小班辅导场景。根据以下学生信息和历史记录，写一段完整流畅的评价（80-150字），不分段、不加任何小标题。\n' +
+      '内容按顺序涵盖：学习状态概括→结合正确率和掌握比例的综合分析→具体建议→一句鼓励。' +
+      (hasDiscipline ? '\n用户提到的纪律问题可简要提及，但不过度展开。' : '\n不要提及纪律相关的内容。') +
+      '\n不提姓名和作业。不用"同学""上课"等学校词汇。' +
+      (settings.aiStyle ? '\n风格：' + settings.aiStyle : '') +
+      (settings.aiSamples ? '\n范文参考：\n' + settings.aiSamples : '') +
+      '\n\n' + info +
+      (currentPerf ? '\n用户已填内容（可参考）：' + currentPerf : '');
 
     fetch('https://api.deepseek.com/v1/chat/completions', {
       method: 'POST',
@@ -643,46 +637,27 @@
       body: JSON.stringify({
         model: 'deepseek-chat',
         messages: [
-          { role: 'system', content: '你是培训机构专业督学师。按【学习状态】【课堂纪律】【综合分析】【建议】【鼓励】格式输出。客观评价，不猜测未提及的问题。不提姓名和作业。' },
+          { role: 'system', content: '你是培训机构专业督学师。写一段完整流畅的评价，不分段无标题。客观评价，不猜测未提及的问题。不提姓名和作业。' },
           { role: 'user', content: prompt }
         ],
-        max_tokens: 400, temperature: 0.7
+        max_tokens: 300, temperature: 0.7
       })
     }).then(function(res) {
       if (!res.ok) throw new Error('API error ' + res.status);
       return res.json();
     }).then(function(json) {
       var text = json.choices[0].message.content.trim();
-      // Parse sections
-      var sections = { imp: '', perf: '' };
-      var markers = ['【学习状态】','【课堂纪律】','【综合分析】','【建议】','【鼓励】'];
-      var startIdx = -1;
-      for (var m = 0; m < markers.length; m++) {
-        var idx = text.indexOf(markers[m]);
-        if (idx >= 0) {
-          if (startIdx >= 0) {
-            sections.imp += text.substring(startIdx, idx).trim() + '\n\n';
-          }
-          startIdx = idx;
-        }
-      }
-      if (startIdx >= 0) {
-        sections.imp += text.substring(startIdx).trim();
-      } else {
-        sections.imp = text; // fallback
-      }
-      sections.perf = sections.imp;
 
       // Write to DOM and cache
       var impEl = document.getElementById('bt-' + rowIndex + '-imp');
       var perfEl = document.getElementById('bt-' + rowIndex + '-perf');
-      if (impEl) impEl.value = sections.imp;
-      if (perfEl) perfEl.value = sections.perf;
+      if (impEl) impEl.value = text;
+      if (perfEl) perfEl.value = text;
 
       // Store in memory cache for generateFeedback
       if (!window.CF.Feedback._aiResults) window.CF.Feedback._aiResults = {};
-      window.CF.Feedback._aiResults['bt-' + rowIndex + '-imp'] = sections.imp;
-      window.CF.Feedback._aiResults['bt-' + rowIndex + '-perf'] = sections.perf;
+      window.CF.Feedback._aiResults['bt-' + rowIndex + '-imp'] = text;
+      window.CF.Feedback._aiResults['bt-' + rowIndex + '-perf'] = text;
     }).catch(function(err) {
       showToast('AI 失败，请检查 API Key');
       console.error(err);
