@@ -116,9 +116,12 @@
 
     var text = buildFeedbackText(record);
     if (navigator.share) {
-      navigator.share({ text: text }).catch(function() {});
+      navigator.share({ title: '课堂反馈 - ' + record.studentName, text: text }).catch(function() {
+        copyHistory(id);
+      });
     } else {
       copyHistory(id);
+      showToast('已复制，可粘贴到微信发送');
     }
   }
 
@@ -145,6 +148,56 @@
     document.body.removeChild(textarea);
   }
 
+  function exportHistory() {
+    var allHistory = Storage.getHistory();
+    if (allHistory.length === 0) { showToast('暂无历史记录可导出'); return; }
+
+    var rows = [['日期','时间','学生姓名','科目','督学师','学习内容','正确率','掌握比例','建议提升','课堂表现','作业布置与完成情况']];
+    for (var i = 0; i < allHistory.length; i++) {
+      var h = allHistory[i];
+      rows.push([h.date, h.time, h.studentName, h.subject, h.teacher, h.content,
+        h.accuracy, h.mastery, h.improvement, h.performance, h.homework]);
+    }
+
+    var ws = XLSX.utils.aoa_to_sheet(rows);
+    var wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, '历史反馈');
+    XLSX.writeFile(wb, '课堂反馈历史记录.xlsx');
+    showToast('导出成功');
+  }
+
+  function handleHistoryImport(file) {
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        var data = new Uint8Array(e.target.result);
+        var workbook = XLSX.read(data, { type: 'array' });
+        var sheet = workbook.Sheets[workbook.SheetNames[0]];
+        var rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+        var count = 0;
+        for (var i = 1; i < rows.length; i++) {
+          var r = rows[i];
+          if (!r || !r[0] || !r[2]) continue;
+          Storage.addFeedback({
+            date: String(r[0] || ''), time: String(r[1] || ''), studentName: String(r[2] || ''),
+            subject: String(r[3] || ''), teacher: String(r[4] || ''), content: String(r[5] || ''),
+            accuracy: String(r[6] || ''), mastery: String(r[7] || ''), improvement: String(r[8] || ''),
+            performance: String(r[9] || ''), homework: String(r[10] || '')
+          });
+          count++;
+        }
+        render();
+        if (window.CF.Settings && window.CF.Settings.init) window.CF.Settings.init();
+        showToast('成功导入 ' + count + ' 条记录');
+      } catch(err) {
+        showToast('导入失败，请检查文件格式');
+        console.error(err);
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
   function escapeHtml(str) {
     var div = document.createElement('div');
     div.textContent = str;
@@ -161,6 +214,8 @@
     toggleDetail: toggleDetail,
     copyHistory: copyHistory,
     shareHistory: shareHistory,
-    deleteHistory: deleteHistory
+    deleteHistory: deleteHistory,
+    exportHistory: exportHistory,
+    handleHistoryImport: handleHistoryImport
   };
 })();

@@ -699,6 +699,23 @@ input[type="date"] {
   border-radius: var(--radius-sm);
 }
 
+.student-item.batch-mode {
+  padding-left: 8px;
+}
+
+.student-item .batch-check {
+  display: none;
+  width: 18px;
+  height: 18px;
+  margin-right: 10px;
+  accent-color: var(--primary);
+  flex-shrink: 0;
+}
+
+.student-item.batch-mode .batch-check {
+  display: block;
+}
+
 .student-info {
   display: flex;
   gap: 8px;

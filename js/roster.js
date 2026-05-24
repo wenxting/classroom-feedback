@@ -2,6 +2,7 @@
   'use strict';
 
   var Storage = window.CF.Storage;
+  var batchMode = false;
 
   function render() {
     var students = Storage.getStudents();
@@ -16,12 +17,13 @@
 
     emptyHint.style.display = 'none';
     container.innerHTML = students.map(function(s) {
-      return '<div class="student-item">' +
+      return '<div class="student-item' + (batchMode ? ' batch-mode' : '') + '">' +
+        '<input type="checkbox" class="batch-check" value="' + s.id + '" style="display:' + (batchMode ? 'block' : 'none') + '">' +
         '<div class="student-info">' +
           '<span class="student-name">' + escapeHtml(s.name) + '</span>' +
           '<span class="student-class">' + escapeHtml(s.className) + '</span>' +
         '</div>' +
-        '<button class="btn-delete" data-action="delete-student" data-id="' + s.id + '">删除</button>' +
+        '<button class="btn-delete" data-action="delete-student" data-id="' + s.id + '" style="display:' + (batchMode ? 'none' : '') + '">删除</button>' +
       '</div>';
     }).join('');
   }
@@ -96,6 +98,32 @@
     reader.readAsArrayBuffer(file);
   }
 
+  function toggleBatchMode() {
+    batchMode = !batchMode;
+    var btn = document.getElementById('roster-batch-btn');
+    var delBtn = document.getElementById('roster-batch-delete');
+    if (btn) btn.textContent = batchMode ? '完成' : '批量管理';
+    if (delBtn) delBtn.style.display = batchMode ? '' : 'none';
+    render();
+  }
+
+  function batchDeleteStudents() {
+    var checks = document.querySelectorAll('.batch-check:checked');
+    if (checks.length === 0) { showToast('请先勾选要删除的学生'); return; }
+    if (!confirm('确定删除选中的 ' + checks.length + ' 名学生吗？')) return;
+    for (var i = 0; i < checks.length; i++) {
+      Storage.deleteStudent(Number(checks[i].value));
+    }
+    batchMode = false;
+    var btn = document.getElementById('roster-batch-btn');
+    if (btn) btn.textContent = '批量管理';
+    var delBtn = document.getElementById('roster-batch-delete');
+    if (delBtn) delBtn.style.display = 'none';
+    render();
+    window.CF.Feedback.refreshStudentList();
+    showToast('已删除 ' + checks.length + ' 名学生');
+  }
+
   function escapeHtml(str) {
     var div = document.createElement('div');
     div.textContent = str;
@@ -111,6 +139,8 @@
     render: render,
     handleAdd: handleAdd,
     handleDelete: handleDelete,
-    handleExcelImport: handleExcelImport
+    handleExcelImport: handleExcelImport,
+    toggleBatchMode: toggleBatchMode,
+    batchDeleteStudents: batchDeleteStudents
   };
 })();

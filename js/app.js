@@ -58,6 +58,15 @@
         case 'quick-fill':
           window.CF.Feedback.quickFill();
           break;
+        case 'toggle-batch-roster':
+          window.CF.Roster.toggleBatchMode();
+          break;
+        case 'batch-delete-students':
+          window.CF.Roster.batchDeleteStudents();
+          break;
+        case 'export-history':
+          window.CF.History.exportHistory();
+          break;
         case 'save-retention':
           window.CF.Settings.saveRetention();
           break;
@@ -98,6 +107,16 @@
     if (histFilter) {
       histFilter.addEventListener('change', function() {
         window.CF.History.render();
+      });
+    }
+
+    var histImportEl = document.getElementById('history-import-file');
+    if (histImportEl) {
+      histImportEl.addEventListener('change', function(e) {
+        if (e.target.files.length > 0) {
+          window.CF.History.handleHistoryImport(e.target.files[0]);
+          e.target.value = '';
+        }
       });
     }
 

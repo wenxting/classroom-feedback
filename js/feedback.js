@@ -282,9 +282,12 @@
     var text = ta ? ta.value : '';
     if (!text) { showToast('反馈内容未找到'); return; }
     if (navigator.share) {
-      navigator.share({ text: text }).catch(function() {});
+      navigator.share({ title: '课堂反馈 - ' + studentName, text: text }).catch(function() {
+        copyToClipboard(text);
+      });
     } else {
       copyToClipboard(text);
+      showToast('已复制，可粘贴到微信发送');
     }
   }
 
