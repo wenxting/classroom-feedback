@@ -3,7 +3,7 @@
 
   function init() {
     // Version-based cache busting for APK updates
-    var APP_VERSION = '2.0.3';
+    var APP_VERSION = '2.0.4';
     var storedVersion = '';
     try { storedVersion = localStorage.getItem('cf_app_version') || ''; } catch(e) {}
     if (storedVersion !== APP_VERSION) {
