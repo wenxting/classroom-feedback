@@ -55,8 +55,17 @@
     selectAll.disabled = false;
     var allCheckedFlag = true;
 
-    for (var i = 0; i < students.length; i++) {
-      var s = students[i];
+    // Sort: checked students first
+    var sorted = students.slice().sort(function(a, b) {
+      var aChecked = checkedNames.indexOf(a.name) >= 0;
+      var bChecked = checkedNames.indexOf(b.name) >= 0;
+      if (aChecked && !bChecked) return -1;
+      if (!aChecked && bChecked) return 1;
+      return 0;
+    });
+
+    for (var i = 0; i < sorted.length; i++) {
+      var s = sorted[i];
       var checked = checkedNames.indexOf(s.name) >= 0;
       if (!checked) allCheckedFlag = false;
       var label = document.createElement('label');
@@ -110,10 +119,13 @@
   function updateSelectedCount() {
     var count = getCheckedStudentNames().length;
     var el = document.getElementById('fb-selected-count');
+    var deselBtn = document.getElementById('fb-deselect-all');
     if (count === 0) {
       el.textContent = '未选择';
+      if (deselBtn) deselBtn.style.display = 'none';
     } else {
       el.textContent = '已选 ' + count + ' 人';
+      if (deselBtn) deselBtn.style.display = '';
     }
   }
 

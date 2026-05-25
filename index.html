@@ -53,7 +53,10 @@
                 <label class="check-all-label">
                   <input type="checkbox" id="fb-select-all"> 全选
                 </label>
-                <span class="selected-count" id="fb-selected-count">未选择</span>
+                <div>
+                  <span class="selected-count" id="fb-selected-count">未选择</span>
+                  <button type="button" class="btn-deselect" id="fb-deselect-all" style="display:none" data-action="deselect-all">取消</button>
+                </div>
               </div>
               <div class="student-filter-list" id="fb-student-list">
                 <div class="empty-hint" id="fb-student-empty">暂无学生，请先在「学生管理」中添加</div>

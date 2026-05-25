@@ -72,6 +72,11 @@
         case 'quick-fill':
           window.CF.Feedback.quickFill();
           break;
+        case 'deselect-all':
+          Array.prototype.forEach.call(document.querySelectorAll('.fb-student-check'), function(c) { c.checked = false; });
+          document.getElementById('fb-select-all').checked = false;
+          window.CF.Feedback.refreshStudentList();
+          break;
         case 'toggle-batch-roster':
           window.CF.Roster.toggleBatchMode();
           break;

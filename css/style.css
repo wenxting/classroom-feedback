@@ -373,6 +373,17 @@ input[type="date"] {
   font-weight: 500;
 }
 
+.btn-deselect {
+  background: none;
+  border: none;
+  color: var(--text-hint);
+  font-size: 12px;
+  cursor: pointer;
+  margin-left: 6px;
+  padding: 0 4px;
+  font-family: inherit;
+}
+
 .student-filter-list {
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
