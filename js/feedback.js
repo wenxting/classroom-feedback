@@ -609,15 +609,16 @@
     var currentPerf = document.getElementById('fb-performance') ? document.getElementById('fb-performance').value : '';
     var hasDiscipline = /纪律|态度|走神|分心|讲话|迟到|捣乱|不认真/.test(currentPerf);
 
-    var prompt = '这是培训机构一对一/小班辅导场景。根据以下学生信息和历史记录，生成两段内容，严格用【建议提升】和【课堂表现】标记分隔：\n' +
-      '【建议提升】：30-40字，直接指出1-2个知识薄弱点和针对性练习方向。\n' +
+    var prompt = '【重要】本节课科目为：' + data.subject + '。所有分析和建议必须紧扣' + data.subject + '科目内容，绝不涉及其他科目。\n' +
+      '这是培训机构一对一/小班辅导场景。根据以下学生信息生成两段内容，严格用【建议提升】和【课堂表现】标记分隔：\n' +
+      '【建议提升】：30-40字。根据学习内容"' + data.content + '"，具体指出该生在' + data.subject + '科目中1-2个薄弱知识点和针对性练习方向（要具体，如"加强二次函数顶点式练习"，不要泛泛说"加强练习"）。\n' +
       '【课堂表现】：80-150字，完整流畅的一段评价，按学习状态→综合分析→鼓励的顺序写。' +
       (hasDiscipline ? '纪律问题可简要提及。' : '不要提及纪律。') +
       '\n不提姓名和作业。不用"同学""上课"等学校词汇。' +
       (settings.aiStyle ? '\n风格：' + settings.aiStyle : '') +
       (settings.aiSamples ? '\n范文参考：\n' + settings.aiSamples : '') +
       '\n\n' + info +
-      (currentPerf ? '\n用户已填内容（可参考）：' + currentPerf : '');
+      (currentPerf ? '\n【用户已填写的观察内容，请重点参考并在此基础上扩展】：' + currentPerf : '');
 
     fetch('https://api.deepseek.com/v1/chat/completions', {
       method: 'POST',
@@ -625,7 +626,7 @@
       body: JSON.stringify({
         model: 'deepseek-chat',
         messages: [
-          { role: 'system', content: '你是培训机构专业督学师。严格用【建议提升】【课堂表现】两段标记输出。评价客观。不提姓名和作业。' },
+          { role: 'system', content: '你是培训机构' + data.subject + '科目专业督学师。只围绕' + data.subject + '科目展开分析。严格用【建议提升】【课堂表现】两段标记输出。不提姓名和作业。' },
           { role: 'user', content: prompt }
         ],
         max_tokens: 400, temperature: 0.7
@@ -650,11 +651,11 @@
       if (impEl) impEl.value = imp;
       if (perfEl) perfEl.value = perf;
 
-      // Cache by student NAME (not index) to survive re-selection
+      // Cache by student NAME (not index)
       if (!window.CF.Feedback._aiResults) window.CF.Feedback._aiResults = {};
-      window.CF.Feedback._aiResults[studentName] = { imp: imp, perf: perf };
+      window.CF.Feedback._aiResults[studentName] = { imp: imp, perf: perf, done: true };
     }).catch(function(err) {
-      showToast('AI 失败，请检查 API Key');
+      showToast(studentName + ' AI 失败，请重试');
       console.error(err);
     }).finally(function() {
       if (btn) { btn.textContent = 'AI'; btn.classList.remove('loading'); }
@@ -668,14 +669,19 @@
     if (checked.length === 0) { showToast('请先勾选学生'); return; }
     showToast('正在生成 ' + checked.length + ' 名学生...');
     var i = 0;
+    var failed = 0;
     function next() {
       if (i >= checked.length) {
-        showToast('全部已提交，请等待生成完成');
+        if (failed > 0) {
+          showToast('完成（' + failed + ' 人失败，可单独重试）');
+        } else {
+          showToast('全部生成完毕');
+        }
         return;
       }
       aiExpandRow(i);
       i++;
-      setTimeout(next, 600);
+      setTimeout(next, 1000);
     }
     next();
   }
