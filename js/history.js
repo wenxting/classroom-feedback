@@ -150,8 +150,31 @@
     var ws = XLSX.utils.aoa_to_sheet(rows);
     var wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, '历史反馈');
-    XLSX.writeFile(wb, '课堂反馈历史记录.xlsx');
-    showToast('导出成功');
+    var wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+
+    // Blob-based download - works in WebView
+    var blob = new Blob([wbout], { type: 'application/octet-stream' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = '课堂反馈历史记录.xlsx';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function() {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 100);
+
+    // Fallback: if download didn't work, offer via share
+    setTimeout(function() {
+      showToast('如未下载，可到"下载"文件夹查看，或使用分享保存');
+      if (navigator.share) {
+        var file = new File([blob], '课堂反馈历史记录.xlsx', { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          // Don't auto-share, just let user know
+        }
+      }
+    }, 2000);
   }
 
   function handleHistoryImport(file) {
