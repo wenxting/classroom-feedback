@@ -428,7 +428,7 @@
 
     var isImprovement = targetId === 'fb-improvement';
     var prompt = isImprovement
-      ? '这是培训机构一对一/小班辅导场景。根据以下学生信息，写一句具体的练习建议（30字以内），不谈课堂表现。如"加强二次函数顶点式练习"。不用"同学"等学校用词，不提姓名和作业。\n\n' + info
+      ? '这是培训机构一对一/小班辅导场景。根据以下学生信息，写一句具体的练习建议（30字以内），不谈课堂表现。如"加强二次函数顶点式练习"。不用"同学""拿满分"等词，不提姓名和作业。\n\n' + info
       : '这是培训机构一对一/小班辅导场景。写一段完整流畅的评价（80-150字），不分段无标题。按顺序涵盖：学习状态概括→结合正确率和掌握比例的分析→具体建议→一句鼓励。' +
         (hasDiscipline ? '纪律问题可简要提及，不过度展开。' : '不要提及纪律内容。') +
         '不提姓名和作业。\n\n' + info +
@@ -444,7 +444,7 @@
       body: JSON.stringify({
         model: 'deepseek-chat',
         messages: [
-          { role: 'system', content: '你是培训机构专业督学师。注意这是培训机构小班辅导，不是学校大班授课。评价客观平衡，不提及姓名和作业。回复简洁，不用markdown。' },
+          { role: 'system', content: '你是培训机构专业督学师。评价客观平衡，不提及姓名和作业，不用"拿满分"等绝对化词汇。回复简洁。' },
           { role: 'user', content: prompt }
         ],
         max_tokens: 300,
@@ -626,7 +626,7 @@
       '【建议提升】：30字以内。只写具体练习建议，不谈课堂表现。根据"' + data.content + '"和' + data.subject + '科目，一句话指出练习方向，如"加强二次函数顶点式练习"。\n' +
       '【课堂表现】：80-150字，完整流畅的一段评价，按学习状态→综合分析→鼓励的顺序写。' +
       (hasDiscipline ? '纪律问题可简要提及。' : '不要提及纪律。') +
-      '\n不提姓名和作业。不用"同学""上课"等学校词汇。' +
+      '\n不提姓名和作业。不用"同学""上课""拿满分"等词。' +
       (settings.aiStyle ? '\n风格：' + settings.aiStyle : '') +
       (settings.aiSamples ? '\n范文参考：\n' + settings.aiSamples : '') +
       '\n\n' + info +
@@ -638,7 +638,7 @@
       body: JSON.stringify({
         model: 'deepseek-chat',
         messages: [
-          { role: 'system', content: '你是培训机构' + data.subject + '科目专业督学师。只围绕' + data.subject + '科目展开分析。严格用【建议提升】【课堂表现】两段标记输出。不提姓名和作业。' },
+          { role: 'system', content: '你是培训机构' + data.subject + '科目专业督学师。只围绕' + data.subject + '科目展开分析。严格用【建议提升】【课堂表现】两段标记输出。不提姓名和作业，不用"拿满分"等绝对化词汇。' },
           { role: 'user', content: prompt }
         ],
         max_tokens: 400, temperature: 0.7
