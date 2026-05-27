@@ -3,7 +3,7 @@
 
   function init() {
     // Version-based cache busting for APK updates
-    var APP_VERSION = '2.0.4';
+    var APP_VERSION = '2.0.8';
     var storedVersion = '';
     try { storedVersion = localStorage.getItem('cf_app_version') || ''; } catch(e) {}
     if (storedVersion !== APP_VERSION) {
@@ -69,12 +69,16 @@
         case 'ai-expand-all':
           window.CF.Feedback.aiExpandAll();
           break;
+        case 'clear-ai-results':
+          window.CF.Feedback.clearAIResults();
+          break;
         case 'quick-fill':
           window.CF.Feedback.quickFill();
           break;
         case 'deselect-all':
           Array.prototype.forEach.call(document.querySelectorAll('.fb-student-check'), function(c) { c.checked = false; });
           document.getElementById('fb-select-all').checked = false;
+          window.CF.Feedback._aiResults = {};
           window.CF.Feedback.refreshStudentList();
           break;
         case 'toggle-batch-roster':

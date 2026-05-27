@@ -9,7 +9,7 @@
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
   <title>课堂反馈</title>
-  <link rel="stylesheet" href="css/style.css?v=2.0.4">
+  <link rel="stylesheet" href="css/style.css?v=2.0.8">
 </head>
 <body>
   <div class="app-container">
@@ -114,7 +114,10 @@
           <div class="batch-table-wrap">
             <div class="batch-table" id="batch-table"></div>
           </div>
-          <button class="btn btn-ai btn-full" style="margin-top:8px" data-action="ai-expand-all">一键 AI 生成全部（建议提升 + 课堂表现）</button>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button class="btn btn-ai btn-full" data-action="ai-expand-all" style="flex:1">一键 AI 生成全部</button>
+            <button class="btn btn-outline" data-action="clear-ai-results" style="flex:1;font-size:13px">清除 AI 内容</button>
+          </div>
         </div>
 
         <div id="preview-area" style="display:none">
@@ -265,7 +268,7 @@
           <p class="hint-text">清除所有学生、历史记录、预设和设置数据，此操作不可恢复</p>
           <button class="btn btn-danger btn-full" data-action="clear-all">清除所有数据</button>
         </div>
-        <p style="text-align:center;font-size:12px;color:var(--text-hint);padding:8px">课堂反馈 v2.0.4</p>
+        <p style="text-align:center;font-size:12px;color:var(--text-hint);padding:8px">课堂反馈 v2.0.8</p>
       </section>
     </main>
 
@@ -291,12 +294,12 @@
 
   <div id="toast" class="toast"></div>
 
-  <script src="js/xlsx.full.min.js?v=2.0.4"></script>
-  <script src="js/storage.js?v=2.0.4"></script>
-  <script src="js/roster.js?v=2.0.4"></script>
-  <script src="js/feedback.js?v=2.0.4"></script>
-  <script src="js/history.js?v=2.0.4"></script>
-  <script src="js/settings.js?v=2.0.4"></script>
-  <script src="js/app.js?v=2.0.4"></script>
+  <script src="js/xlsx.full.min.js?v=2.0.8"></script>
+  <script src="js/storage.js?v=2.0.8"></script>
+  <script src="js/roster.js?v=2.0.8"></script>
+  <script src="js/feedback.js?v=2.0.8"></script>
+  <script src="js/history.js?v=2.0.8"></script>
+  <script src="js/settings.js?v=2.0.8"></script>
+  <script src="js/app.js?v=2.0.8"></script>
 </body>
 </html>

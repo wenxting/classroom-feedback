@@ -208,6 +208,7 @@
       Array.prototype.forEach.call(document.querySelectorAll('.fb-student-check'), function(c) {
         c.checked = checked;
       });
+      if (!checked) { window.CF.Feedback._aiResults = {}; }
       updateSelectedCount();
       saveDraftStudents();
       renderBatchTable();
@@ -584,13 +585,14 @@
     table.innerHTML = html;
   }
 
-  function aiExpandRow(rowIndex) {
+  function aiExpandRow(rowIndex, totalCount) {
     var settings = Storage.getSettings();
     if (!settings.apiKey) { showToast('请先设置 API Key'); return; }
 
     var checked = document.querySelectorAll('.fb-student-check:checked');
     if (rowIndex >= checked.length) return;
     var studentName = checked[rowIndex].value;
+    var total = totalCount || checked.length;
 
     var btn = document.querySelector('[data-action="ai-expand-row"][data-row="' + rowIndex + '"]');
     if (btn) { btn.textContent = '...'; btn.classList.add('loading'); }
@@ -621,14 +623,33 @@
     var currentPerf = document.getElementById('fb-performance') ? document.getElementById('fb-performance').value : '';
     var hasDiscipline = /纪律|态度|走神|分心|讲话|迟到|捣乱|不认真/.test(currentPerf);
 
+    // Rotate analysis angle per student to increase diversity
+    var styleHints = [
+      '侧重分析解题思路和方法的掌握情况',
+      '侧重分析知识点薄弱环节和提升方向',
+      '侧重分析学习习惯和思维方式的改进空间',
+      '侧重分析练习量和熟练度的提升路径',
+      '侧重分析举一反三和知识迁移能力',
+      '侧重分析基础概念的扎实程度和运用能力'
+    ];
+    var styleHint = styleHints[rowIndex % styleHints.length];
+
+    // Build diversity instruction for multi-student scenarios
+    var diversityNote = '';
+    if (total >= 2) {
+      diversityNote = '\n【关键要求】你正在为' + total + '名学生的同一堂课撰写个性化反馈。这是第' + (rowIndex + 1) + '名学生（' + studentName + '）。每位学生的反馈必须有明显差异——使用不同的分析切入角度、不同的措辞风格、不同的鼓励方式。严禁出现雷同或仅替换姓名的套话。';
+    }
+
     var prompt = '【重要】本节课科目为：' + data.subject + '。所有分析和建议必须紧扣' + data.subject + '科目内容，绝不涉及其他科目。\n' +
       '这是培训机构一对一/小班辅导场景。根据以下学生信息生成两段内容，严格用【建议提升】和【课堂表现】标记分隔：\n' +
       '【建议提升】：30字以内。只写具体练习建议，不谈课堂表现。根据"' + data.content + '"和' + data.subject + '科目，一句话指出练习方向，如"加强二次函数顶点式练习"。\n' +
       '【课堂表现】：80-150字，完整流畅的一段评价，按学习状态→综合分析→鼓励的顺序写。' +
       (hasDiscipline ? '纪律问题可简要提及。' : '不要提及纪律。') +
+      '\n本次分析角度：' + styleHint +
       '\n不提姓名和作业。不用"同学""上课""拿满分"等词。' +
       (settings.aiStyle ? '\n风格：' + settings.aiStyle : '') +
       (settings.aiSamples ? '\n范文参考：\n' + settings.aiSamples : '') +
+      diversityNote +
       '\n\n' + info +
       (currentPerf ? '\n【用户已填写的观察内容，请重点参考并在此基础上扩展】：' + currentPerf : '');
 
@@ -638,10 +659,10 @@
       body: JSON.stringify({
         model: 'deepseek-chat',
         messages: [
-          { role: 'system', content: '你是培训机构' + data.subject + '科目专业督学师。只围绕' + data.subject + '科目展开分析。严格用【建议提升】【课堂表现】两段标记输出。不提姓名和作业，不用"拿满分"等绝对化词汇。' },
+          { role: 'system', content: '你是培训机构' + data.subject + '科目专业督学师。只围绕' + data.subject + '科目展开分析。严格用【建议提升】【课堂表现】两段标记输出。每位学生的评价必须独具特色，措辞和角度不可重复。不提姓名和作业，不用"拿满分"等绝对化词汇。' },
           { role: 'user', content: prompt }
         ],
-        max_tokens: 400, temperature: 0.7
+        max_tokens: 400, temperature: 0.9
       })
     }).then(function(res) {
       if (!res.ok) throw new Error('API error ' + res.status);
@@ -657,11 +678,14 @@
         imp = perf = text;
       }
 
-      // Write to DOM
-      var impEl = document.getElementById('bt-' + rowIndex + '-imp');
-      var perfEl = document.getElementById('bt-' + rowIndex + '-perf');
-      if (impEl) impEl.value = imp;
-      if (perfEl) perfEl.value = perf;
+      // Write to DOM by student name, not index (prevent race condition)
+      var row = document.querySelector('.batch-row[data-student="' + escapeHtml(studentName).replace(/"/g, '&quot;') + '"]');
+      if (row) {
+        var impEl = row.querySelector('input[id$="-imp"]');
+        var perfEl = row.querySelector('input[id$="-perf"]');
+        if (impEl) impEl.value = imp;
+        if (perfEl) perfEl.value = perf;
+      }
 
       // Cache by student NAME (not index)
       if (!window.CF.Feedback._aiResults) window.CF.Feedback._aiResults = {};
@@ -691,11 +715,25 @@
         }
         return;
       }
-      aiExpandRow(i);
+      aiExpandRow(i, checked.length);
       i++;
       setTimeout(next, 1000);
     }
     next();
+  }
+
+  function clearAIResults() {
+    // Clear AI content from all batch table rows
+    var rows = document.querySelectorAll('.batch-row[data-student]');
+    for (var i = 0; i < rows.length; i++) {
+      var impEl = rows[i].querySelector('input[id$="-imp"]');
+      var perfEl = rows[i].querySelector('input[id$="-perf"]');
+      if (impEl) impEl.value = '';
+      if (perfEl) perfEl.value = '';
+    }
+    // Clear AI cache
+    window.CF.Feedback._aiResults = {};
+    showToast('已清除所有 AI 扩展内容');
   }
 
   function generateFeedback() {
@@ -724,10 +762,12 @@
       // Get per-student data from table if available
       var rowAcc = data.accuracy, rowMas = data.mastery, rowImp = data.improvement, rowPerf = data.performance;
       if (checked.length > 0) {
-        var accEl = document.getElementById('bt-' + i + '-acc');
-        var masEl = document.getElementById('bt-' + i + '-mas');
-        var impEl = document.getElementById('bt-' + i + '-imp');
-        var perfEl = document.getElementById('bt-' + i + '-perf');
+        // Find batch row by student name, not index (prevent mismatch)
+        var batchRow = document.querySelector('.batch-row[data-student="' + escapeHtml(studentName).replace(/"/g, '&quot;') + '"]');
+        var accEl = batchRow ? batchRow.querySelector('input[id$="-acc"]') : null;
+        var masEl = batchRow ? batchRow.querySelector('input[id$="-mas"]') : null;
+        var impEl = batchRow ? batchRow.querySelector('input[id$="-imp"]') : null;
+        var perfEl = batchRow ? batchRow.querySelector('input[id$="-perf"]') : null;
         if (accEl && accEl.value) rowAcc = accEl.value;
         if (masEl && masEl.value) rowMas = masEl.value;
         // Prefer AI memory cache (by student name) over DOM value
@@ -792,6 +832,7 @@
     aiExpand: aiExpand,
     aiExpandRow: aiExpandRow,
     aiExpandAll: aiExpandAll,
+    clearAIResults: clearAIResults,
     renderBatchTable: renderBatchTable,
     reloadDefaults: reloadDefaults,
     doShare: doShare,
