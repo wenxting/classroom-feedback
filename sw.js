@@ -1,24 +1,36 @@
-var CACHE_NAME = 'cf-v2';
+var CACHE_NAME = 'cf-v2.0.8';
 
 self.addEventListener('install', function(event) {
   event.waitUntil(
     caches.open(CACHE_NAME).then(function(cache) {
       return cache.addAll([
-        './', 'index.html', 'css/style.css',
+        'css/style.css',
         'js/storage.js', 'js/roster.js', 'js/feedback.js',
         'js/history.js', 'js/settings.js', 'js/app.js', 'js/xlsx.full.min.js',
         'manifest.json', 'icon.svg'
       ]);
     })
   );
+  self.skipWaiting();
 });
 
 self.addEventListener('fetch', function(event) {
-  event.respondWith(
-    caches.match(event.request).then(function(response) {
-      return response || fetch(event.request);
-    })
-  );
+  var url = new URL(event.request.url);
+  // Network-first for HTML to always get latest version
+  if (event.request.method !== 'GET') return;
+  if (url.pathname.endsWith('.html') || url.pathname === '/' || url.pathname.endsWith('/')) {
+    event.respondWith(
+      fetch(event.request).catch(function() {
+        return caches.match(event.request);
+      })
+    );
+  } else {
+    event.respondWith(
+      caches.match(event.request).then(function(response) {
+        return response || fetch(event.request);
+      })
+    );
+  }
 });
 
 self.addEventListener('activate', function(event) {
@@ -28,6 +40,8 @@ self.addEventListener('activate', function(event) {
         cacheNames.filter(function(name) { return name !== CACHE_NAME; })
           .map(function(name) { return caches.delete(name); })
       );
+    }).then(function() {
+      return self.clients.claim();
     })
   );
 });
