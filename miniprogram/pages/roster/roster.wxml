@@ -1,0 +1,25 @@
+<view class="card">
+  <view class="card-title">添加学生</view>
+  <view class="form-row">
+    <view class="form-group half"><label>姓名</label><input style="height: 66rpx; display: block; box-sizing: border-box" value="{{name}}" placeholder="学生姓名" bindinput="onInput" data-field="name" /></view>
+    <view class="form-group half"><label>年级</label><input style="height: 66rpx; display: block; box-sizing: border-box" value="{{grade}}" placeholder="如：初三" bindinput="onInput" data-field="grade" /></view>
+  </view>
+  <button class="btn btn-primary btn-full" bindtap="onAdd">添加</button>
+</view>
+
+<view class="card">
+  <view style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+    <text style="font-size:16px;font-weight:600;color:#5b9bd5">学生名单</text>
+    <button class="btn btn-outline btn-sm" bindtap="onToggleBatch" style="position: relative; left: 106rpx; top: -8rpx">{{batchMode ? '完成' : '批量管理'}}</button>
+  </view>
+  <view wx:if="{{students.length === 0}}" class="empty-hint">暂无学生</view>
+  <view wx:for="{{students}}" wx:key="id" style="display:flex;align-items:center;padding:14rpx 10rpx;background:#f8f9fa;border-radius:8rpx;margin-bottom:6rpx;min-height:120rpx">
+    <view wx:if="{{batchMode}}" style="width:44rpx;height:44rpx;border:3rpx solid {{item.checked ? '#5b9bd5' : '#ccc'}};border-radius:8rpx;display:flex;align-items:center;justify-content:center;margin-right:14rpx" bindtap="onCheck" data-id="{{item.id}}">
+      <text wx:if="{{item.checked}}" style="color:#5b9bd5;font-size:28rpx;font-weight:bold">✓</text>
+    </view>
+    <text style="flex:1;font-weight:500;font-size:28rpx">{{item.name}}</text>
+    <text style="font-size:24rpx;color:#666;margin:0 10rpx">{{item.grade}}</text>
+    <button wx:if="{{!batchMode}}" class="btn-delete" bindtap="onDelete" data-id="{{item.id}}">删除</button>
+  </view>
+  <button wx:if="{{batchMode && hasChecked}}" class="btn btn-danger btn-full" style="margin-top:8px" bindtap="onBatchDelete">删除选中</button>
+</view>

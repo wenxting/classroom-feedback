@@ -1,0 +1,20 @@
+<input placeholder="输入学生姓名查找..." value="{{filterText}}" bindinput="onFilter" style="margin: 8px; padding: 8px 12px; border: 1px solid #e0e0e0; border-radius: 8px; width: calc(100% - 16px); box-sizing: border-box; height: 74rpx; display: block" />
+<view class="card" wx:for="{{list}}" wx:key="id">
+  <view style="display:flex;justify-content:space-between;align-items:center;padding:8px 0" bindtap="onToggle" data-id="{{item.id}}">
+    <view>
+      <text style="font-weight:500">{{item.studentName}}</text>
+      <text style="font-size:13px;color:#5b9bd5;margin-left:8px">{{item.subject}}</text>
+      <text style="font-size:12px;color:#999;margin-left:8px">{{item.date}}</text>
+    </view>
+    <text style="font-size:12px;color:#999">{{item.expanded ? '▲' : '▼'}}</text>
+  </view>
+  <view wx:if="{{item.expanded}}" style="border-top:1px solid #e0e0e0;padding-top:8px">
+    <textarea value="{{item.text}}" style="width:100%;min-height:120px;font-size:13px;padding:8px;background:#f8f9fa;border-radius:8px" disabled />
+    <view style="display:flex;gap:8px;margin-top:8px">
+      <button class="btn btn-primary btn-sm" bindtap="onCopy" data-id="{{item.id}}">复制</button>
+      <button class="btn btn-secondary btn-sm" bindtap="onShare" data-id="{{item.id}}">分享</button>
+      <button class="btn btn-delete" bindtap="onDelete" data-id="{{item.id}}">删除</button>
+    </view>
+  </view>
+</view>
+<view wx:if="{{list.length === 0}}" class="empty-hint">暂无历史记录</view>

@@ -1,0 +1,20 @@
+.student-list { border:1rpx solid #e0e0e0; border-radius:8rpx; background:#fafbfc; max-height:300rpx; overflow-y:auto; }
+.student-item { display:flex; align-items:center; padding:18rpx 20rpx; border-bottom:1rpx solid #f0f0f0; min-height:120rpx; }
+.grade-text { font-size:24rpx; color:#999; margin-left:16rpx; }
+
+.filter-bar { display:flex; align-items:center; padding:10rpx 0; font-size:24rpx; gap:12rpx; }
+.count-text { color:#5b9bd5; font-weight:500; }
+.deselect-btn { color:#999; font-size:22rpx; padding:4rpx 8rpx; }
+
+.ai-row { display:flex; gap:12rpx; align-items:flex-start; }
+.ai-row input, .ai-row textarea { flex:1; }
+.ai-btn { flex-shrink:0; margin-top:0; padding:8rpx 16rpx; font-size:22rpx; background:#667eea; color:#fff; border-radius:6rpx; line-height:1.4; }
+
+.mastery-row { display:flex; align-items:center; gap:8rpx; }
+
+.batch-header { display:flex; align-items:center; background:#f0f4f8; padding:10rpx 0; font-size:22rpx; font-weight:600; color:#666; }
+.batch-row { display:flex; align-items:center; padding:8rpx 0; border-bottom:1rpx solid #eee; }
+.batch-cell { padding:0 4rpx; font-size:22rpx; text-align:center; }
+.batch-row input { width:80rpx; padding:6rpx 2rpx; font-size:20rpx; text-align:center; min-height:auto; }
+
+.form-actions { display:flex; flex-direction:column; gap:12rpx; margin-top:16rpx; }

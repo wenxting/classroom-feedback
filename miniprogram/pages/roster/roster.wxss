@@ -1,0 +1,2 @@
+.student-row { display:flex; align-items:center; padding:14rpx 10rpx; background:#f8f9fa; border-radius:8rpx; margin-bottom:6rpx; font-size:28rpx; min-height:120rpx; }
+.student-row checkbox { margin-right:12rpx; }

@@ -1,0 +1,27 @@
+{
+  "pages": [
+    "pages/feedback/feedback",
+    "pages/roster/roster",
+    "pages/history/history",
+    "pages/settings/settings"
+  ],
+  "window": {
+    "navigationBarTitleText": "课堂反馈",
+    "navigationBarBackgroundColor": "#5b9bd5",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#e8f4fd"
+  },
+  "tabBar": {
+    "color": "#999999",
+    "selectedColor": "#5b9bd5",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "black",
+    "list": [
+      { "pagePath": "pages/feedback/feedback", "text": "反馈生成", "iconPath": "icons/edit.png", "selectedIconPath": "icons/edit-active.png" },
+      { "pagePath": "pages/roster/roster", "text": "学生管理", "iconPath": "icons/people.png", "selectedIconPath": "icons/people-active.png" },
+      { "pagePath": "pages/history/history", "text": "历史记录", "iconPath": "icons/list.png", "selectedIconPath": "icons/list-active.png" },
+      { "pagePath": "pages/settings/settings", "text": "设置", "iconPath": "icons/settings.png", "selectedIconPath": "icons/settings-active.png" }
+    ]
+  },
+  "style": "v2"
+}

@@ -1,0 +1,141 @@
+<view class="card">
+  <view class="card-title">反馈信息</view>
+
+  <view class="form-row">
+    <view class="form-group half">
+      <label>日期</label>
+      <picker mode="date" value="{{form.date}}" bindchange="onDateChange">
+        <input style="height: 64rpx; display: block; box-sizing: border-box" value="{{form.date}}" placeholder="选择日期" disabled />
+      </picker>
+    </view>
+    <view class="form-group half">
+      <label>时间</label>
+      <input style="height: 72rpx; display: block; box-sizing: border-box" value="{{form.time}}" placeholder="如：15:00-17:00" bindinput="onFieldChange" data-field="time" />
+    </view>
+  </view>
+
+  <view class="form-row">
+    <view class="form-group half">
+      <label>科目</label>
+      <input style="height: 66rpx; display: block; box-sizing: border-box" value="{{form.subject}}" placeholder="如：数学" bindinput="onFieldChange" data-field="subject" />
+    </view>
+    <view class="form-group half">
+      <label>督学师</label>
+      <input style="height: 66rpx; display: block; box-sizing: border-box" value="{{form.teacher}}" placeholder="如：文老师" bindinput="onFieldChange" data-field="teacher" />
+    </view>
+  </view>
+
+  <view class="form-group">
+    <label>学生姓名（可多选）</label>
+    <input style="height: 60rpx; display: block; box-sizing: border-box" value="{{studentInput}}" placeholder="输入姓名，或从下方名单勾选" bindinput="onStudentInput" />
+    <view style="border:1rpx solid #e0e0e0;border-radius:8rpx;background:#fafbfc;max-height:360rpx;overflow-y:auto">
+      <block wx:for="{{sortedStudents}}" wx:key="id">
+        <view style="display:flex;align-items:center;padding:24rpx 20rpx;border-bottom:1rpx solid #f0f0f0;min-height:120rpx" bindtap="onToggleStudent" data-name="{{item.name}}">
+          <view style="width:48rpx;height:48rpx;border:3rpx solid {{item.checked ? '#5b9bd5' : '#ccc'}};border-radius:8rpx;display:flex;align-items:center;justify-content:center;margin-right:20rpx">
+            <text wx:if="{{item.checked}}" style="color:#5b9bd5;font-size:32rpx;font-weight:bold">✓</text>
+          </view>
+          <view style="flex:1">
+            <text style="font-size:28rpx;font-weight:500">{{item.name}}</text>
+            <text style="font-size:24rpx;color:#999;margin-left:16rpx">{{item.grade}}</text>
+          </view>
+        </view>
+      </block>
+      <view wx:if="{{students.length === 0}}" style="text-align:center;color:#999;padding:40rpx;font-size:26rpx">暂无学生，请先到「学生管理」添加</view>
+    </view>
+    <view wx:if="{{students.length > 0}}" style="display:flex;align-items:center;padding:10rpx 0;font-size:24rpx;gap:12rpx">
+      <view style="width:40rpx;height:40rpx;border:2rpx solid {{selectAll ? '#5b9bd5' : '#ccc'}};border-radius:6rpx;display:flex;align-items:center;justify-content:center" bindtap="onSelectAll">
+        <text wx:if="{{selectAll}}" style="color:#5b9bd5;font-size:26rpx;font-weight:bold">✓</text>
+      </view>
+      <text style="color:#5b9bd5;font-weight:500">{{checkedCount > 0 ? '已选' + checkedCount + '人' : '未选择'}}</text>
+      <text wx:if="{{checkedCount > 0}}" style="color:#999;font-size:22rpx;padding:4rpx 8rpx" bindtap="onDeselectAll">取消</text>
+    </view>
+  </view>
+
+  <view class="form-group">
+    <label>学习内容</label>
+    <input style="height: 74rpx; display: block; box-sizing: border-box" value="{{form.content}}" placeholder="如：卷子" bindinput="onFieldChange" data-field="content" />
+  </view>
+
+  <view class="form-row">
+    <view class="form-group half">
+      <label>正确率默认值（%）</label>
+      <input style="height: 62rpx; display: block; box-sizing: border-box" value="{{form.accuracy}}" placeholder="如：80" bindinput="onFieldChange" data-field="accuracy" />
+    </view>
+    <view class="form-group half">
+      <label>掌握默认值</label>
+      <view class="mastery-row">
+        <input value="{{form.masteryA}}" placeholder="6" bindinput="onFieldChange" data-field="masteryA" style="text-align: center; height: 62rpx; display: block; box-sizing: border-box; width: 141rpx" />
+        <text style="font-size:18px;color:#999">/</text>
+        <input value="{{form.masteryB}}" placeholder="7" bindinput="onFieldChange" data-field="masteryB" style="text-align: center; height: 66rpx; display: block; box-sizing: border-box; width: 137rpx" />
+      </view>
+    </view>
+  </view>
+
+  <view class="form-group" wx:if="{{checkedCount <= 1}}">
+    <label>建议提升</label>
+    <view class="ai-row">
+      <input value="{{form.improvement}}" placeholder="如：加强圆的综合证明题练习" bindinput="onFieldChange" data-field="improvement" style="height: 66rpx; display: block; box-sizing: border-box" />
+      <button style="padding: 8rpx 16rpx; font-size: 22rpx; background: #667eea; color: #fff; border-radius: 6rpx; flex-shrink: 0; margin: 0; line-height: 1.4; width: 70rpx; display: block; box-sizing: border-box; left: 0rpx; top: 0rpx" bindtap="onAIExpand" data-target="improvement">AI</button>
+    </view>
+  </view>
+
+  <view class="form-group" wx:if="{{checkedCount <= 1}}">
+    <label>课堂表现</label>
+    <view class="ai-row">
+      <textarea value="{{form.performance}}" placeholder="描述学生的课堂表现..." bindinput="onFieldChange" data-field="performance" style="flex:1;min-height:60px" />
+      <button style="padding: 8rpx 16rpx; font-size: 22rpx; background: #667eea; color: #fff; border-radius: 6rpx; flex-shrink: 0; margin: 0; line-height: 1.4; width: 66rpx; display: block; box-sizing: border-box; left: 0rpx; top: 0rpx" bindtap="onAIExpand" data-target="performance">AI</button>
+    </view>
+  </view>
+
+  <!-- Batch table for 2+ students -->
+  <view wx:if="{{checkedCount >= 2}}" class="card">
+    <view class="card-title">学生个性数据</view>
+    <scroll-view scroll-x enable-flex style="width:100%;white-space:nowrap">
+      <view style="min-width:700rpx">
+        <view class="batch-header">
+          <text class="batch-cell" style="width:80rpx">学生</text>
+          <text class="batch-cell" style="width:80rpx">正确率</text>
+          <text class="batch-cell" style="width:100rpx">掌握</text>
+          <text class="batch-cell" style="width:160rpx">建议提升</text>
+          <text class="batch-cell" style="width:160rpx">课堂表现</text>
+          <text class="batch-cell" style="width:60rpx">AI</text>
+        </view>
+        <view class="batch-row" wx:for="{{batchStudents}}" wx:key="name">
+          <text class="batch-cell" style="width:80rpx;font-size:24rpx">{{item.name}}</text>
+          <input class="batch-cell" style="width:80rpx" value="{{item.acc}}" bindinput="onBatchChange" data-index="{{index}}" data-field="acc" />
+          <input class="batch-cell" style="width:100rpx" value="{{item.mas}}" bindinput="onBatchChange" data-index="{{index}}" data-field="mas" />
+          <input class="batch-cell" style="width:160rpx" value="{{item.imp}}" bindinput="onBatchChange" data-index="{{index}}" data-field="imp" />
+          <input class="batch-cell" style="width:160rpx" value="{{item.perf}}" bindinput="onBatchChange" data-index="{{index}}" data-field="perf" />
+          <button class="btn btn-ai btn-sm" bindtap="onAIExpandRow" data-index="{{index}}">AI</button>
+        </view>
+      </view>
+    </scroll-view>
+    <button class="btn btn-ai btn-full" style="margin-top:16rpx" bindtap="onAIExpandAll">一键AI生成全部</button>
+  </view>
+
+  <view class="form-group">
+    <label>作业布置与完成情况</label>
+    <textarea value="{{form.homework}}" placeholder="如：作业已完成，课后多练习巩固知识点" bindinput="onFieldChange" data-field="homework" style="min-height:50px" />
+  </view>
+
+  <view class="form-actions" style="height: 210rpx; display: flex; box-sizing: border-box" style="height: 189rpx; display: flex; box-sizing: border-box">
+    <button class="btn btn-primary btn-full" bindtap="onGenerate" style="position: relative; left: -168rpx; top: 0rpx; width: 337rpx; display: block; box-sizing: border-box">批量生成反馈</button>
+    <button class="btn btn-secondary btn-full" style="margin-top: 8px; position: relative; left: 194rpx; top: -95rpx; width: 302rpx; display: block; box-sizing: border-box" bindtap="onClearForm">清空表单</button>
+  </view>
+</view>
+
+<!-- Preview -->
+<view wx:if="{{previewVisible}}" class="card">
+  <view class="card-title">生成结果</view>
+  <block wx:for="{{previewList}}" wx:key="name">
+    <view style="margin-bottom:16px">
+      <view style="background:#5b9bd5;color:#fff;padding:6px 12px;border-radius:8px 8px 0 0;font-size:14px">{{item.name}}</view>
+      <textarea value="{{item.text}}" style="width:100%;min-height:100px;padding:8px;font-size:13px;border:1px solid #e0e0e0;box-sizing:border-box" bindinput="onPreviewEdit" data-index="{{index}}" />
+      <view style="display:flex;gap:8px;padding:8px;background:#f8f9fa;border-radius:0 0 8px 8px">
+        <button class="btn btn-primary btn-sm" bindtap="onCopySingle" data-index="{{index}}">复制</button>
+        <button class="btn btn-secondary btn-sm" bindtap="onShareSingle" data-index="{{index}}">分享</button>
+      </view>
+    </view>
+  </block>
+  <button class="btn btn-primary btn-full" bindtap="onCopyAll">一键复制全部</button>
+</view>

@@ -598,8 +598,10 @@
     if (btn) { btn.textContent = '...'; btn.classList.add('loading'); }
 
     var data = getFormData();
-    var accEl = document.getElementById('bt-' + rowIndex + '-acc');
-    var masEl = document.getElementById('bt-' + rowIndex + '-mas');
+    // Read per-student data by name, not index (prevent mismatch if table reordered)
+    var batchRow = document.querySelector('.batch-row[data-student="' + escapeHtml(studentName).replace(/"/g, '&quot;') + '"]');
+    var accEl = batchRow ? batchRow.querySelector('input[id$="-acc"]') : null;
+    var masEl = batchRow ? batchRow.querySelector('input[id$="-mas"]') : null;
     var rowAcc = accEl && accEl.value ? accEl.value : data.accuracy;
     var rowMas = masEl && masEl.value ? masEl.value : data.mastery;
     var masteryNote = rowMas ? '\n【重要】掌握比例 ' + rowMas + ' 的含义：本节课共涉及 ' + (rowMas.split('/')[1] || '?') + ' 个知识点，学生仅掌握了其中 ' + (rowMas.split('/')[0] || '?') + ' 个。请据此评估知识薄弱点。' : '';
