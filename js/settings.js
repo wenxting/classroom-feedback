@@ -118,6 +118,59 @@
     showToast('已删除');
   }
 
+  function backupAll() {
+    var data = {
+      version: '2.0.10',
+      exportedAt: new Date().toISOString(),
+      students: Storage.getStudents(),
+      history: Storage.getHistory(),
+      settings: Storage.getSettings()
+    };
+    var json = JSON.stringify(data, null, 2);
+    var blob = new Blob([json], { type: 'application/json' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = '课堂反馈备份_' + new Date().toISOString().slice(0, 10) + '.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(a.href);
+    showToast('备份已下载');
+  }
+
+  function restoreAll() {
+    var input = document.getElementById('restore-file-input');
+    input.value = '';
+    input.onchange = function() {
+      var file = input.files[0];
+      if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          var data = JSON.parse(e.target.result);
+          if (!data.students || !data.history || !data.settings) {
+            showToast('备份文件格式不正确');
+            return;
+          }
+          if (!confirm('将恢复 ' + data.students.length + ' 名学生、' + data.history.length + ' 条历史记录和设置数据。当前数据将被覆盖，确认继续？')) return;
+          Storage.saveStudents(data.students);
+          Storage.saveHistory(data.history);
+          Storage.saveSettings(data.settings);
+          window.CF.Roster.render();
+          window.CF.Feedback.refreshStudentList();
+          window.CF.Feedback.refreshDatalists();
+          window.CF.History.render();
+          init();
+          showToast('数据已恢复');
+        } catch (err) {
+          showToast('文件解析失败，请检查文件格式');
+        }
+      };
+      reader.readAsText(file);
+    };
+    input.click();
+  }
+
   function clearAll() {
     if (!confirm('确定要清除所有数据吗？包括学生名单、历史记录、预设和设置数据，此操作不可恢复！')) return;
     if (!confirm('再次确认：清除所有数据？')) return;
@@ -147,6 +200,8 @@
     addPreset: addPreset,
     removePreset: removePreset,
     saveRetention: saveRetention,
+    backupAll: backupAll,
+    restoreAll: restoreAll,
     clearAll: clearAll
   };
 })();

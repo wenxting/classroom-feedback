@@ -3,7 +3,7 @@
 
   function init() {
     // Version-based cache busting for APK updates
-    var APP_VERSION = '2.0.9';
+    var APP_VERSION = '2.0.10';
     var storedVersion = '';
     try { storedVersion = localStorage.getItem('cf_app_version') || ''; } catch(e) {}
     if (storedVersion !== APP_VERSION) {
@@ -119,6 +119,12 @@
           break;
         case 'remove-preset':
           window.CF.Settings.removePreset(target.dataset.presetType, target.dataset.presetValue);
+          break;
+        case 'backup-all':
+          window.CF.Settings.backupAll();
+          break;
+        case 'restore-all':
+          window.CF.Settings.restoreAll();
           break;
         case 'clear-all':
           window.CF.Settings.clearAll();

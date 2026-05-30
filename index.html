@@ -9,7 +9,7 @@
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
   <title>课堂反馈</title>
-  <link rel="stylesheet" href="css/style.css?v=2.0.9">
+  <link rel="stylesheet" href="css/style.css?v=2.0.10">
 </head>
 <body>
   <div class="app-container">
@@ -263,12 +263,22 @@
           <button class="btn btn-primary btn-full" data-action="save-retention">保存</button>
         </div>
 
+        <div class="card">
+          <h2 class="card-title">数据备份与恢复</h2>
+          <p class="hint-text" style="margin-bottom:10px">导出全部数据（学生名单、历史反馈、设置预设）为备份文件，换设备时可一键恢复</p>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-primary" data-action="backup-all" style="flex:1">完整备份</button>
+            <button class="btn btn-outline" data-action="restore-all" style="flex:1">完整恢复</button>
+          </div>
+          <input type="file" id="restore-file-input" accept=".json" style="display:none">
+        </div>
+
         <div class="card card-danger">
           <h2 class="card-title">危险操作</h2>
           <p class="hint-text">清除所有学生、历史记录、预设和设置数据，此操作不可恢复</p>
           <button class="btn btn-danger btn-full" data-action="clear-all">清除所有数据</button>
         </div>
-        <p style="text-align:center;font-size:12px;color:var(--text-hint);padding:8px">课堂反馈 v2.0.9</p>
+        <p style="text-align:center;font-size:12px;color:var(--text-hint);padding:8px">课堂反馈 v2.0.10</p>
       </section>
     </main>
 
@@ -294,12 +304,12 @@
 
   <div id="toast" class="toast"></div>
 
-  <script src="js/xlsx.full.min.js?v=2.0.9"></script>
-  <script src="js/storage.js?v=2.0.9"></script>
-  <script src="js/roster.js?v=2.0.9"></script>
-  <script src="js/feedback.js?v=2.0.9"></script>
-  <script src="js/history.js?v=2.0.9"></script>
-  <script src="js/settings.js?v=2.0.9"></script>
-  <script src="js/app.js?v=2.0.9"></script>
+  <script src="js/xlsx.full.min.js?v=2.0.10"></script>
+  <script src="js/storage.js?v=2.0.10"></script>
+  <script src="js/roster.js?v=2.0.10"></script>
+  <script src="js/feedback.js?v=2.0.10"></script>
+  <script src="js/history.js?v=2.0.10"></script>
+  <script src="js/settings.js?v=2.0.10"></script>
+  <script src="js/app.js?v=2.0.10"></script>
 </body>
 </html>

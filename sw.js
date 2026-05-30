@@ -1,4 +1,4 @@
-var CACHE_NAME = 'cf-v2.0.9';
+var CACHE_NAME = 'cf-v2.0.10';
 
 self.addEventListener('install', function(event) {
   event.waitUntil(
